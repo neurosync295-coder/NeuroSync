@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>NeuroSync - AI-Powered Focus & Mental Wellbeing Companion</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;700&family=Story+Script:wght@400&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/mobile-optimizations.css">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="js/theme.js"></script>
+</head>
+
+<body class="bg-primary dark">
+  <!-- Background Effects -->
+  <div class="fixed inset-0 -z-10 overflow-hidden">
+    <div class="particle"
+      style="--x-start: 10vw; --y-start: 20vh; --x-end: 90vw; --y-end: 80vh; width: 2px; height: 2px; animation-delay: 0s;">
+    </div>
+    <div class="particle"
+      style="--x-start: 80vw; --y-start: 10vh; --x-end: 20vw; --y-end: 90vh; width: 1px; height: 1px; animation-delay: -1s;">
+    </div>
+    <div class="particle"
+      style="--x-start: 5vw; --y-start: 90vh; --x-end: 95vw; --y-end: 5vh; width: 3px; height: 3px; animation-delay: -2s;">
+    </div>
+    <div class="particle"
+      style="--x-start: 95vw; --y-start: 85vh; --x-end: 5vw; --y-end: 15vh; width: 2px; height: 2px; animation-delay: -3s;">
+    </div>
+    <div class="particle"
+      style="--x-start: 50vw; --y-start: 5vh; --x-end: 50vw; --y-end: 95vh; width: 1px; height: 1px; animation-delay: -4s;">
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <header class="sticky top-0 z-20 backdrop-blur-sm border-b border-primary bg-primary/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-3 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="index.html" class="flex items-center gap-3">
+        <img src="assets/Navbar_logo copy.png" alt="NeuroSync Logo" class="h-10 w-auto">
+      </a>
+
+      <!-- Desktop Nav -->
+      <nav class="hidden xl:flex items-center gap-4">
+        <a href="html/dashboard.html" id="dashboard-nav-link"
+          class="translucent-button rounded-full px-4 py-2 text-sm text-secondary hover:text-primary transition-colors"
+          style="display: none;">
+          Dashboard
+        </a>
+
+        <!-- Resources Dropdown -->
+        <div class="relative group">
+          <button
+            class="translucent-button rounded-full px-4 py-2 text-sm text-secondary hover:text-primary transition-colors flex items-center gap-1">
+            Resources
+            <span class="material-symbols-outlined text-base">expand_more</span>
+          </button>
+          <div
+            class="dropdown-menu absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-md shadow-lg bg-secondary/80 backdrop-blur-sm border border-primary hidden">
+            <div class="py-1">
+              <a href="html/mood-selection.html"
+                class="block px-4 py-2 text-sm text-secondary hover:bg-primary/50 hover:text-primary transition-colors">Mood
+                Tracker</a>
+              <a href="html/study-library.html"
+                class="block px-4 py-2 text-sm text-secondary hover:bg-primary/50 hover:text-primary transition-colors">Study
+                Library</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Company Dropdown -->
+        <div class="relative group">
+          <button
+            class="translucent-button rounded-full px-4 py-2 text-sm text-secondary hover:text-primary transition-colors flex items-center gap-1">
+            Company
+            <span class="material-symbols-outlined text-base">expand_more</span>
+          </button>
+          <div
+            class="dropdown-menu absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-md shadow-lg bg-secondary/80 backdrop-blur-sm border border-primary hidden">
+            <div class="py-1">
+              <a href="html/feedback.html"
+                class="block px-4 py-2 text-sm text-secondary hover:bg-primary/50 hover:text-primary transition-colors">Feedback</a>
+              <a href="html/about.html"
+                class="block px-4 py-2 text-sm text-secondary hover:bg-primary/50 hover:text-primary transition-colors">About
+                Us</a>
+            </div>
+          </div>
+        </div>
+
+        <a href="html/rewards.html" id="rewards-nav-link"
+          class="translucent-button rounded-full px-4 py-2 text-sm text-secondary hover:text-primary transition-colors"
+          style="display: none;">Rewards</a>
+        <a href="html/profile.html" id="profile-nav-link"
+          class="translucent-button rounded-full px-4 py-2 text-sm text-secondary hover:text-primary transition-colors"
+          style="display: none;">Profile</a>
+        <button id="theme-toggle"
+          class="translucent-button flex items-center justify-center rounded-full size-10 hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-xl">dark_mode</span>
+        </button>
+      </nav>
+
+      <!-- Right Side -->
+      <div class="flex items-center gap-4">
+        <!-- User Profile -->
+        <div id="navbar-profile" class="hidden sm:flex items-center gap-3 cursor-pointer relative">
+          <div
+            class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shadow-[0_0_15px_rgba(128,19,236,0.5)]"
+            id="navbar-profile-photo">
+            <span
+              class="material-symbols-outlined text-xl text-purple-400 flex items-center justify-center w-full h-full">person</span>
+          </div>
+          <div class="flex flex-col">
+            <div class="text-white text-sm font-medium" id="navbar-name">User</div>
+            <div class="text-purple-300 text-xs" id="navbar-class-role">Student</div>
+          </div>
+          <!-- Dropdown -->
+          <div id="navbar-dropdown"
+            class="absolute top-full right-0 mt-2 w-48 rounded-md shadow-lg bg-[#1A1122] backdrop-blur-sm border border-[#2A1F36] hidden z-50">
+            <div class="py-1">
+              <a href="html/profile.html"
+                class="flex items-center gap-3 px-4 py-2 text-sm text-white hover:bg-[#362348] transition-colors">
+                <span class="material-symbols-outlined text-base">person</span> See Profile
+              </a>
+              <button id="navbar-sign-out-btn"
+                class="flex items-center gap-3 px-4 py-2 text-sm text-white hover:bg-[#362348] transition-colors w-full text-left">
+                <span class="material-symbols-outlined text-base">logout</span> Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="theme-toggle"
+          class="translucent-button flex items-center justify-center rounded-full size-11 hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-2xl">dark_mode</span>
+        </button>
+
+        <!-- Get Started -->
+        <button id="get-started-btn"
+          class="hidden sm:flex translucent-button px-6 h-11 text-base font-bold rounded-full">
+          Get Started
+        </button>
+
+        <!-- Mobile Menu -->
+        <button class="xl:hidden translucent-button flex items-center justify-center rounded-full size-11">
+          <span class="material-symbols-outlined text-2xl">menu</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1">
+    <!-- Hero Section -->
+    <section class="relative text-center py-24 px-4">
+      <div class="absolute inset-0 opacity-10"
+        style="background-image: radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.2), transparent 70%);"></div>
+      <div class="relative z-10 max-w-4xl mx-auto">
+        <h1 class="text-5xl md:text-6xl font-extrabold tracking-tighter text-primary"
+          style='font-family: "Story Script", cursive; text-shadow: rgba(147, 51, 234, 0.5) 0px 0px 15px;'>
+          NeuroSync
+        </h1>
+        <p class="mt-4 text-lg md:text-xl text-secondary max-w-2xl mx-auto">AI-Powered Focus & Mental Wellbeing
+          Companion for Students</p>
+        <div class="mt-10 flex flex-wrap gap-4 justify-center">
+          <a href="html/auth.html" class="translucent-button px-8 h-12 text-lg font-bold rounded-full">
+            Create Free Account
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 px-4 sm:px-10 bg-gray-800/50">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight">Key Features</h2>
+          <p class="mt-2 text-lg text-gray-300">Discover what makes NeuroSync the ultimate companion</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <span class="material-symbols-outlined" style="font-size: 2rem;">mood</span>
+            </div>
+            <h3 class="feature-title">AI Mood Tracking</h3>
+            <p class="feature-description">Log emotions with intelligent tracking that provides personalized tips and
+              insights based on your mood patterns.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <span class="material-symbols-outlined" style="font-size: 2rem;">timer</span>
+            </div>
+            <h3 class="feature-title">Focus Timer</h3>
+            <p class="feature-description">Immersive Pomodoro timer with ambient sounds, themes, goal setting, and
+              reflection sessions.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <span class="material-symbols-outlined" style="font-size: 2rem;">library_books</span>
+            </div>
+            <h3 class="feature-title">Study Library</h3>
+            <p class="feature-description">Access curated educational materials with teacher-approved content and
+              collaborative learning.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <span class="material-symbols-outlined" style="font-size: 2rem;">emoji_events</span>
+            </div>
+            <h3 class="feature-title">Rewards System</h3>
+            <p class="feature-description">Earn points for sessions, unlock achievements, and track progress with
+              badges.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <span class="material-symbols-outlined" style="font-size: 2rem;">dashboard</span>
+            </div>
+            <h3 class="feature-title">Personal Dashboard</h3>
+            <p class="feature-description">Monitor your wellbeing with analytics, mood trends, and focus statistics.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <span class="material-symbols-outlined" style="font-size: 2rem;">forum</span>
+            </div>
+            <h3 class="feature-title">Community</h3>
+            <p class="feature-description">Connect with peers through comments and feedback in a supportive learning
+              community.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pomodoro Timer Section -->
+    <section class="py-20 px-4 sm:px-10 bg-secondary/30 backdrop-blur-sm">
+      <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 class="text-3xl md:text-4xl font-bold text-primary tracking-tight">Focus Timer</h2>
+          <p class="mt-4 text-lg text-muted">Boost productivity with our interactive Pomodoro timer.</p>
+
+          <div class="mt-8 bg-primary/70 backdrop-blur-sm border border-primary rounded-xl p-6">
+            <div class="flex items-center gap-4">
+              <div class="flex items-center justify-center bg-accent rounded-full size-16 shrink-0">
+                <span class="text-2xl">⏰</span>
+              </div>
+              <div class="flex-1">
+                <p class="text-xl font-bold text-primary mb-2">Pomodoro Timer</p>
+                <div class="flex gap-2 mb-4">
+                  <button id="time-15" class="translucent-button px-3 py-1 text-sm rounded-full">15 min</button>
+                  <button id="time-25"
+                    class="translucent-button px-3 py-1 text-sm rounded-full bg-accent text-primary">25 min</button>
+                  <button id="time-30" class="translucent-button px-3 py-1 text-sm rounded-full">30 min</button>
+                  <button id="time-45" class="translucent-button px-3 py-1 text-sm rounded-full">45 min</button>
+                </div>
+                <p id="timer-display"
+                  class="text-3xl font-mono text-secondary tracking-widest rounded-lg px-4 py-2 inline-block"
+                  style="background-color: rgba(147, 51, 234, 0.1);">
+                  25:00
+                </p>
+              </div>
+              <div class="flex gap-2">
+                <button id="start-btn"
+                  class="translucent-button flex shrink-0 items-center justify-center rounded-full size-16 hover:scale-110 transition-transform">
+                  <span class="material-symbols-outlined text-4xl">play_arrow</span>
+                </button>
+                <button id="pause-btn"
+                  class="translucent-button flex shrink-0 items-center justify-center rounded-full size-16 hover:scale-110 transition-transform"
+                  style="display: none;">
+                  <span class="material-symbols-outlined text-4xl">pause</span>
+                </button>
+                <button id="reset-btn"
+                  class="translucent-button flex shrink-0 items-center justify-center rounded-full size-16 hover:scale-110 transition-transform">
+                  <span class="material-symbols-outlined text-4xl">replay</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <div class="flex justify-between mb-1 items-center">
+                <span class="text-base font-medium text-primary">Focus Level</span>
+                <span id="progress-text" class="text-sm font-bold text-accent px-2 py-1 rounded-full"
+                  style="background-color: rgba(147, 51, 234, 0.1);"></span>
+              </div>
+              <div class="w-full bg-primary/80 rounded-full h-3 overflow-hidden">
+                <div id="progress-bar" class="accent-gradient h-3 rounded-full transition-all duration-500"></div>
+              </div>
+              <button id="fullscreen-btn" class="mt-4">
+                <span class="material-symbols-outlined">fullscreen</span>
+                Enter Focus Mode
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center">
+          <div class="relative inline-block">
+            <div
+              class="w-52 h-52 sm:w-64 sm:h-64 bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center rounded-full">
+              <span class="text-6xl">🧠</span>
+            </div>
+            <div
+              class="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-primary/70 backdrop-blur-sm px-4 py-2 rounded-lg border border-primary">
+              <p class="text-primary font-bold">Focus Sprite</p>
+              <p class="text-sm text-muted">Level 5</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Study Library Preview -->
+    <section class="py-20 px-4 sm:px-10 bg-secondary/50 backdrop-blur-sm">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold text-primary tracking-tight">Study Library</h2>
+          <p class="mt-2 text-lg text-muted">Access curated study materials</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div
+            class="rounded-xl bg-secondary/50 backdrop-blur-sm border border-primary overflow-hidden hover:-translate-y-2 transition-transform duration-300">
+            <div class="h-48 bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+              <span class="text-white text-4xl">📐</span>
+            </div>
+            <div class="p-5">
+              <p class="text-xl font-bold text-primary">Mathematics</p>
+              <p class="text-muted mt-1">Calculus, Algebra, and more</p>
+            </div>
+          </div>
+
+          <div
+            class="rounded-xl bg-secondary/50 backdrop-blur-sm border border-primary overflow-hidden hover:-translate-y-2 transition-transform duration-300">
+            <div class="h-48 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+              <span class="text-white text-4xl">⚛️</span>
+            </div>
+            <div class="p-5">
+              <p class="text-xl font-bold text-primary">Physics</p>
+              <p class="text-muted mt-1">Mechanics, Thermodynamics</p>
+            </div>
+          </div>
+
+          <div
+            class="rounded-xl bg-secondary/50 backdrop-blur-sm border border-primary overflow-hidden hover:-translate-y-2 transition-transform duration-300">
+            <div class="h-48 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+              <span class="text-white text-4xl">🧪</span>
+            </div>
+            <div class="p-5">
+              <p class="text-xl font-bold text-primary">Chemistry</p>
+              <p class="text-muted mt-1">Organic, Inorganic</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center mt-8">
+          <a href="html/study-library.html" class="translucent-button px-8 py-3 rounded-full font-bold inline-block">
+            Explore Library
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comments Section -->
+    <section class="py-20 px-4 sm:px-10">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold text-primary tracking-tight">Comments</h2>
+          <p class="mt-2 text-lg text-muted">Share your thoughts!</p>
+        </div>
+
+        <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-4 sm:p-8">
+          <form id="comment-form" class="mb-8">
+            <input type="hidden" id="postId-input" value="homepage">
+            <div class="mb-4">
+              <label for="name-input" class="block text-primary font-medium mb-2">Your Name</label>
+              <input type="text" id="name-input"
+                class="w-full px-4 py-3 bg-input border border-input rounded-lg text-primary placeholder-color focus:ring-accent focus:border-accent"
+                placeholder="Enter your name...">
+            </div>
+            <div class="mb-4">
+              <label for="comment-input" class="block text-primary font-medium mb-2">Your Message</label>
+              <textarea id="comment-input" rows="4"
+                class="w-full px-4 py-3 bg-input border border-input rounded-lg text-primary placeholder-color focus:ring-accent focus:border-accent resize-none"
+                placeholder="Write your comment here..."></textarea>
+            </div>
+            <button type="submit"
+              class="translucent-button px-6 py-3 rounded-full font-bold hover:scale-105 transition-transform">
+              Send Comment
+            </button>
+          </form>
+
+          <div id="comments-display" class="space-y-4">
+            <!-- Comments loaded dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Focus Mode Modals -->
+  <div id="goal-modal" class="focus-mode-modal">
+    <div class="focus-mode-modal-content">
+      <h3>Set Your Focus Goal</h3>
+      <input type="text" id="goal-input" placeholder="What do you want to accomplish?" maxlength="100">
+      <div class="modal-buttons">
+        <button class="btn-secondary" onclick="closeGoalModal()">Skip</button>
+        <button class="btn-primary" onclick="setSessionGoal()">Set Goal</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reflection-modal" class="focus-mode-modal">
+    <div class="focus-mode-modal-content">
+      <h3>Session Reflection</h3>
+      <p style="color: var(--zen-text); margin-bottom: 1rem;">How focused were you?</p>
+      <select id="focus-rating">
+        <option value="">Select focus level</option>
+        <option value="5">Very Focused (5/5)</option>
+        <option value="4">Focused (4/5)</option>
+        <option value="3">Moderate (3/5)</option>
+        <option value="2">Distracted (2/5)</option>
+        <option value="1">Very Distracted (1/5)</option>
+      </select>
+      <textarea id="reflection-notes" placeholder="Any notes?" rows="3"></textarea>
+      <div class="modal-buttons">
+        <button class="btn-secondary" onclick="skipReflection()">Skip</button>
+        <button class="btn-primary" onclick="saveReflection()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ambient Sound Audio -->
+  <audio id="rain-sound" loop preload="none">
+    <source src="https://www.soundjay.com/misc/sounds/rain-03.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="nature-sound" loop preload="none">
+    <source src="https://www.soundjay.com/misc/sounds/forest-ambience.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="white-noise-sound" loop preload="none">
+    <source src="https://www.soundjay.com/misc/sounds/white-noise.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="ocean-sound" loop preload="none">
+    <source src="https://www.soundjay.com/misc/sounds/ocean-waves.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="cafe-sound" loop preload="none">
+    <source src="https://www.soundjay.com/misc/sounds/cafe-ambience.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="fire-sound" loop preload="none">
+    <source src="https://www.soundjay.com/misc/sounds/fireplace.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Custom JS -->
+  <script src="js/index.js"></script>
+</body>
+
+</html>
