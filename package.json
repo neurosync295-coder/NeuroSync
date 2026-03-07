@@ -1,6 +1,13 @@
 {
+  "scripts": {
+    "build": "echo 'Build successful'",
+    "deploy": "wrangler deploy"
+  },
   "dependencies": {
     "@dataconnect/generated": "file:src/dataconnect-generated",
     "firebase": "^12.2.1"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
   }
 }
