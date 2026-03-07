@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "echo 'Build successful'",
+    "build": "mkdir -p dist && cp -r index.html html css js assets dist",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
