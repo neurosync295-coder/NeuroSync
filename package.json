@@ -1,7 +1,7 @@
 {
   "scripts": {
     "build": "echo 'Build successful'",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy --assets=."
   },
   "dependencies": {
     "@dataconnect/generated": "file:src/dataconnect-generated",
