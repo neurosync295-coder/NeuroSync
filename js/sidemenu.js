@@ -1,0 +1,300 @@
+/**
+ * NeuroSync Side Menu Component
+ * Handles dynamic injection and active link highlighting across all app pages.
+ */
+
+// Capture script base URL for robust relative imports
+const SIDEMENU_SCRIPT_SRC = document.currentScript ? document.currentScript.src : '';
+const SIDEMENU_SCRIPT_BASE = SIDEMENU_SCRIPT_SRC.substring(0, SIDEMENU_SCRIPT_SRC.lastIndexOf('/') + 1);
+
+// Global Exposure for Sequential Init
+window.initSideMenuInteractivity = () => {
+    console.log('[SideMenu] Interactivity Setup Triggered');
+    setupMobileMenu();
+    setupSupabaseProfileUpdate();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Determine path prefix based on location
+    const isInHtmlDir = window.location.pathname.includes('/html/');
+    const pfx = isInHtmlDir ? '../' : './';
+    const htmlPfx = isInHtmlDir ? '' : 'html/';
+
+    // 2. Define the Side Menu HTML
+    const sideMenuHTML = `
+        <aside id="side-menu" class="fixed top-0 left-0 h-full w-64 z-50 transition-all duration-300 -translate-x-full">
+            <div class="p-6 h-full flex flex-col relative">
+                <!-- Close Button -->
+                <button id="close-menu-btn" class="absolute top-4 right-4 translucent-button rounded-full size-8 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+                <!-- User Profile Box -->
+                <div id="side-profile-box" onclick="window.location.href='${htmlPfx}profile.html'"
+                    class="flex items-center gap-3 mb-8 p-4 bg-[#161618] border border-[#27272A] cursor-pointer transition-all hover:bg-[#1C1C1E] hover:border-[var(--accent-signal,#F97316)]/30">
+                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-none size-12 border border-[#27272A]"
+                        id="side-profile-photo">
+                        <span class="material-symbols-outlined text-xl text-[var(--accent-signal,#F97316)] flex items-center justify-center w-full h-full">person</span>
+                    </div>
+                    <div class="flex flex-col overflow-hidden">
+                        <div class="text-[#FAFAFA] text-sm font-medium truncate" id="side-name">Loading...</div>
+                        <div class="text-[#A1A1AA] text-xs truncate" id="side-class-role">Student</div>
+                    </div>
+                </div>
+
+                <!-- Menu Items -->
+                <nav class="flex flex-col gap-1 flex-grow overflow-y-auto">
+                    <a href="${htmlPfx}dashboard.html" data-path="dashboard.html" class="nav-item">
+                        <span class="material-symbols-outlined text-accent">dashboard</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="${htmlPfx}rewards.html" data-path="rewards.html" class="nav-item">
+                        <span class="material-symbols-outlined text-accent">emoji_events</span>
+                        <span>Rewards</span>
+                    </a>
+                    <a href="${htmlPfx}profile.html" data-path="profile.html" class="nav-item">
+                        <span class="material-symbols-outlined text-accent">person</span>
+                        <span>Profile</span>
+                    </a>
+                    <a href="${htmlPfx}study-library.html" data-path="study-library.html" class="nav-item">
+                        <span class="material-symbols-outlined text-accent">library_books</span>
+                        <span>Study Library</span>
+                    </a>
+                    <a href="${htmlPfx}mood-selection.html" data-path="mood-selection.html" class="nav-item">
+                        <span class="material-symbols-outlined text-accent">mood</span>
+                        <span>Mood Tracker</span>
+                    </a>
+                    <a href="${htmlPfx}upload-material.html" data-path="upload-material.html" class="nav-item">
+                        <span class="material-symbols-outlined text-accent">upload</span>
+                        <span>Upload Study Material</span>
+                    </a>
+                    <a href="${htmlPfx}feedback.html" data-path="feedback.html" class="nav-item">
+                        <span class="material-symbols-outlined text-accent">feedback</span>
+                        <span>Feedback Us</span>
+                    </a>
+                </nav>
+
+                <!-- Sign Out Button at Bottom -->
+                <div class="mt-auto pt-4 border-t border-[#27272A]">
+                    <a href="#" onclick="if(typeof signOut === 'function') { signOut(); } else { window.location.href='${htmlPfx}auth.html'; }" 
+                       class="nav-item flex items-center gap-3 px-4 py-3 text-[#A1A1AA] hover:bg-red-500/10 hover:text-red-400 transition-colors group/signout">
+                        <span class="material-symbols-outlined text-red-400 group-hover/signout:scale-110 transition-transform">logout</span>
+                        <span>Sign Out</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Mobile Toggle Overlay (Hidden by default) -->
+        <div id="menu-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm opacity-0 invisible transition-opacity duration-300 z-40"></div>
+    `;
+
+    // 2. Inject Sidebar if target container exists or prepend to body
+    let container = document.getElementById('side-menu-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'side-menu-container';
+        document.body.prepend(container);
+    }
+    container.innerHTML = sideMenuHTML;
+
+    // 3. Highlight Active Link
+    highlightActiveLink();
+
+    // DO NOT initialize interactivity here locally; 
+    // Wait for the Navbar to call window.initSideMenuInteractivity()
+    // However, if the Navbar component doesn't load after some time, 
+    // or if this page doesn't have a navbar, we trigger it as a fallback.
+    setTimeout(() => {
+        if (!window.sideMenuInteractivityInited) {
+            console.log('[SideMenu] Fallback Interactivity Init');
+            window.initSideMenuInteractivity();
+            window.sideMenuInteractivityInited = true;
+        }
+    }, 1500);
+});
+
+function setupMobileMenu() {
+    // Re-select buttons to ensure we have the ones injected in index.html
+    const mobileMenuBtns = document.querySelectorAll('#mobile-menu-btn');
+    const sideMenu = document.getElementById('side-menu');
+    const overlay = document.getElementById('menu-overlay');
+    const closeBtn = document.getElementById('close-menu-btn');
+
+    console.log(`[SideMenu] Mobile Setup: Found ${mobileMenuBtns.length} buttons.`);
+
+    function toggleMenu() {
+        // Re-query elements if they are missing (e.g., if called before injection is fully processed)
+        const sideMenu = document.getElementById('side-menu');
+        const overlay = document.getElementById('menu-overlay');
+
+        if (!sideMenu || !overlay) {
+            console.error('[SideMenu] UI Elements missing for toggle. Attempting to re-inject or wait...');
+            // Optional: trigger injection if side-menu-container is empty? 
+            // For now, just logging is enough as the DOMContentLoaded should handle injection.
+            return;
+        }
+        const isHidden = sideMenu.classList.contains('-translate-x-full');
+        if (isHidden) {
+            sideMenu.classList.remove('-translate-x-full');
+            overlay.classList.remove('invisible', 'opacity-0');
+        } else {
+            sideMenu.classList.add('-translate-x-full');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => overlay.classList.add('invisible'), 300);
+        }
+    }
+
+    // Attach to all found buttons
+    if (mobileMenuBtns.length > 0) {
+        mobileMenuBtns.forEach(btn => {
+            btn.onclick = (e) => {
+                e.preventDefault();
+                toggleMenu();
+            };
+        });
+    }
+
+    if (closeBtn) closeBtn.onclick = toggleMenu;
+    if (overlay) overlay.onclick = toggleMenu;
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sideMenu && !sideMenu.classList.contains('-translate-x-full')) {
+            toggleMenu();
+        }
+    });
+
+    // Invisible left edge hover trigger
+    if (!document.getElementById('side-menu-hover-trigger')) {
+        const hoverTrigger = document.createElement('div');
+        hoverTrigger.id = 'side-menu-hover-trigger';
+        hoverTrigger.className = 'fixed top-0 left-0 w-5 h-full z-40';
+        document.body.appendChild(hoverTrigger);
+
+        hoverTrigger.addEventListener('mouseenter', () => {
+            const sideMenu = document.getElementById('side-menu');
+            if (sideMenu && sideMenu.classList.contains('-translate-x-full')) {
+                toggleMenu();
+            }
+        });
+    }
+
+    window.sideMenuInteractivityInited = true;
+}
+
+function highlightActiveLink() {
+    const currentPath = window.location.pathname;
+    const currentHash = window.location.hash;
+    const page = currentPath.split('/').pop() || 'dashboard.html';
+    const navLinks = document.querySelectorAll('#side-menu nav a');
+
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        const dataPath = link.getAttribute('data-path');
+
+        link.classList.remove('active-link');
+
+        // Match against href or data-path
+        const matchesPage = (href === page || dataPath === page);
+        const matchesFull = (href === (page + currentHash) || dataPath === (page + currentHash));
+
+        if (matchesPage || matchesFull) {
+            link.classList.add('active-link');
+        } else if (href && href.includes('#') && (page + currentHash).startsWith(href)) {
+            link.classList.add('active-link');
+        }
+    });
+
+    // Special case for dashboard root
+    if (!page || page === 'index.html') {
+        const dashLink = document.querySelector('a[href="dashboard.html"]');
+        if (dashLink) dashLink.classList.add('active-link');
+    }
+}
+
+function setupSupabaseProfileUpdate() {
+    // Listen for shared auth events from Navbar to avoid contention
+    document.addEventListener('neurosync:auth-update', (e) => {
+        const { session, supabase } = e.detail;
+        console.log('[SideMenu] Received Auth Update Event');
+        if (session?.user) {
+            updateSidebarFromSupabase(supabase, session.user);
+        } else {
+            const sideName = document.getElementById('side-name');
+            if (sideName) sideName.textContent = 'Guest';
+            const sideClass = document.getElementById('side-class-role');
+            if (sideClass) sideClass.textContent = 'Not Connected';
+        }
+    });
+
+    // Fallback import if Navbar is missing
+    const importPath = SIDEMENU_SCRIPT_BASE ? `${SIDEMENU_SCRIPT_BASE}supabase.js` : './supabase.js';
+    import(importPath).then(({ supabase }) => {
+        // Only run if navbar hasn't handled it after 1.5s
+        setTimeout(() => {
+            const sideName = document.getElementById('side-name');
+            if (sideName && sideName.textContent === 'Loading...') {
+                console.log('[SideMenu] Running Fallback Supabase Check');
+                supabase.auth.getSession().then(({ data: { session } }) => {
+                    if (session?.user) {
+                        updateSidebarFromSupabase(supabase, session.user);
+                    } else {
+                        sideName.textContent = 'Guest';
+                    }
+                });
+            }
+        }, 1600);
+    });
+}
+
+async function updateSidebarFromSupabase(supabase, user) {
+    try {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, class_grade, role, photo_url')
+            .eq('id', user.id)
+            .single();
+
+        const p = profile || {};
+        const displayName = `${p.first_name || ''} ${p.last_name || ''}`.trim() || user.email.split('@')[0] || 'User';
+
+        const sideName = document.getElementById('side-name');
+        const sideClass = document.getElementById('side-class-role');
+        const sidePhoto = document.getElementById('side-profile-photo');
+
+        if (sideName) sideName.textContent = displayName;
+        if (sideClass) sideClass.textContent = p.class_grade || 'Student';
+
+        if (sidePhoto) {
+            if (p.photo_url) {
+                sidePhoto.style.backgroundImage = `url("${p.photo_url}")`;
+                sidePhoto.innerHTML = '';
+            } else {
+                sidePhoto.style.backgroundImage = 'none';
+                sidePhoto.innerHTML = '<span class="material-symbols-outlined text-xl text-[var(--primary-color)] flex items-center justify-center w-full h-full">person</span>';
+            }
+        }
+
+        // Dynamic Role-based Links
+        const nav = document.querySelector('#side-menu nav');
+        if (nav) {
+            if (p.role === 'Teacher' && !document.querySelector('a[href="teacher-dashboard.html"]')) {
+                const teacherLink = document.createElement('a');
+                teacherLink.href = 'teacher-dashboard.html';
+                teacherLink.className = 'nav-item';
+                teacherLink.innerHTML = '<span class="material-symbols-outlined text-accent">school</span><span>Teacher Dashboard</span>';
+                nav.insertBefore(teacherLink, nav.children[1]);
+                highlightActiveLink();
+            }
+            if (p.role === 'Admin' && !document.querySelector('a[href="feedback-admin.html"]')) {
+                const adminLink = document.createElement('a');
+                adminLink.href = 'feedback-admin.html';
+                adminLink.className = 'nav-item';
+                adminLink.innerHTML = '<span class="material-symbols-outlined text-accent">admin_panel_settings</span><span>Admin Panel</span>';
+                nav.appendChild(adminLink);
+                highlightActiveLink();
+            }
+        }
+    } catch (error) {
+        console.error('Error updating sidebar profile:', error);
+    }
+}

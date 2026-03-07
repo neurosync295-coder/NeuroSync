@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect" />
+    <link as="style"
+        href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Space+Grotesk%3Awght%40400%3B500%3B700&amp;family=Story+Script%3Awght%40400"
+        onload="this.rel='stylesheet'" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <title>Teacher Dashboard - NeuroSync</title>
+    <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="../js/sidemenu.js"></script>
+    <script src="../js/theme.js"></script>
+    <script src="../js/navbar-component.js"></script>
+    <!-- Supabase Integration -->
+    <script type="module">
+        import { supabase } from '../js/supabase.js';
+
+        let userProfile = null;
+
+        // Check authentication and role
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            const user = session?.user;
+            if (user) {
+                await loadUserProfile(user);
+                if (userProfile && (userProfile.role === 'Teacher' || userProfile.role === 'Admin')) {
+                    await loadPendingMaterials();
+                    await loadApprovedMaterials();
+                    await loadTeacherStats();
+                } else {
+                    showNotification('Access denied. Teacher role required.', 'error');
+                    setTimeout(() => window.location.href = 'dashboard.html', 2000);
+                }
+            } else {
+                window.location.href = 'auth.html';
+            }
+        });
+
+        async function loadUserProfile(user) {
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                if (error) throw error;
+                userProfile = data;
+
+                // Update navbar name
+                const displayName = userProfile.first_name && userProfile.last_name
+                    ? `${userProfile.first_name} ${userProfile.last_name}`
+                    : user.email.split('@')[0] || 'User';
+
+                const navName = document.getElementById('navbar-name');
+                const welcomeMsg = document.getElementById('welcome-message');
+                if (navName) navName.textContent = displayName;
+                if (welcomeMsg) welcomeMsg.textContent = `Welcome, ${userProfile.first_name || displayName.split(' ')[0]}!`;
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        async function loadPendingMaterials() {
+            try {
+                const { data: materials, error } = await supabase
+                    .from('study_materials')
+                    .select('*')
+                    .eq('approval_status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const container = document.getElementById('pending-materials');
+                if (!container) return;
+                container.innerHTML = '';
+
+                if (!materials || materials.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8">
+                            <span class="material-symbols-outlined text-4xl text-secondary mb-4">check_circle</span>
+                            <p class="text-secondary">No pending materials to review.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                materials.forEach(material => {
+                    const materialCard = createPendingMaterialCard(material.id, material);
+                    container.appendChild(materialCard);
+                });
+
+            } catch (error) {
+                console.error('Error loading pending materials:', error);
+            }
+        }
+
+        async function loadApprovedMaterials() {
+            try {
+                const { data: materials, error } = await supabase
+                    .from('study_materials')
+                    .select('*')
+                    .eq('approval_status', 'approved')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                const container = document.getElementById('approved-materials');
+                if (!container) return;
+                container.innerHTML = '';
+
+                materials.forEach(material => {
+                    const materialCard = createApprovedMaterialCard(material.id, material);
+                    container.appendChild(materialCard);
+                });
+
+            } catch (error) {
+                console.error('Error loading approved materials:', error);
+            }
+        }
+
+        async function loadTeacherStats() {
+            try {
+                const { count: pendingCount } = await supabase
+                    .from('study_materials')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('approval_status', 'pending');
+
+                const { count: approvedCount } = await supabase
+                    .from('study_materials')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('approval_status', 'approved');
+
+                const { count: studentCount } = await supabase
+                    .from('profiles')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('role', 'Student');
+
+                const pCount = document.getElementById('pending-count');
+                const aCount = document.getElementById('approved-count');
+                const sCount = document.getElementById('total-students');
+
+                if (pCount) pCount.textContent = pendingCount || 0;
+                if (aCount) aCount.textContent = approvedCount || 0;
+                if (sCount) sCount.textContent = studentCount || 0;
+
+            } catch (error) {
+                console.error('Error loading teacher stats:', error);
+            }
+        }
+
+        function createPendingMaterialCard(materialId, material) {
+            const card = document.createElement('div');
+            card.className = 'bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6 mb-4';
+
+            const uploadDate = new Date(material.created_at).toLocaleDateString();
+            const fileIcon = getFileIcon(material.file_type || material.subject);
+
+            card.innerHTML = `
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">${fileIcon}</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-primary">${material.title || 'Untitled'}</h3>
+                            <p class="text-sm text-secondary">${material.subject} • ${material.class_grade} • ${material.file_type || 'Document'}</p>
+                        </div>
+                    </div>
+                    <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-medium">Pending</span>
+                </div>
+                
+                <p class="text-muted mb-4">${material.description || 'No description available.'}</p>
+                
+                <div class="flex items-center justify-between text-sm text-secondary mb-4">
+                    <span>Uploaded by: User</span>
+                    <span>${uploadDate}</span>
+                </div>
+                
+                <div class="flex gap-3">
+                    <a href="${material.file_url}" target="_blank" class="flex-1 translucent-button py-2 rounded-lg text-sm font-medium hover:scale-105 transition-transform flex items-center justify-center">
+                        <span class="material-symbols-outlined text-sm mr-1">visibility</span>
+                        Preview
+                    </a>
+                    <button onclick="window.approveMaterial('${materialId}')" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg text-sm font-medium transition-colors">
+                        <span class="material-symbols-outlined text-sm mr-1">check</span>
+                        Approve
+                    </button>
+                    <button onclick="window.rejectMaterial('${materialId}')" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-medium transition-colors">
+                        <span class="material-symbols-outlined text-sm mr-1">close</span>
+                        Reject
+                    </button>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function createApprovedMaterialCard(materialId, material) {
+            const card = document.createElement('div');
+            card.className = 'bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-4 mb-3';
+
+            const uploadDate = new Date(material.created_at).toLocaleDateString();
+            const fileIcon = getFileIcon(material.file_type || material.subject);
+
+            card.innerHTML = `
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-2xl">${fileIcon}</span>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-primary">${material.title || 'Untitled'}</h4>
+                        <p class="text-sm text-secondary">${material.subject} • ${material.class_grade}</p>
+                    </div>
+                    <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium">Approved</span>
+                </div>
+                <div class="flex items-center justify-between text-xs text-secondary">
+                    <span>${uploadDate}</span>
+                    <button onclick="window.revokeApproval('${materialId}')" class="text-red-400 hover:text-red-300 transition-colors">
+                        Revoke
+                    </button>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function getFileIcon(type) {
+            const icons = {
+                'Notes': '📝',
+                'PYQ': '📋',
+                'Video': '🎥',
+                'QuestionBank': '📚',
+                'PDF': '📄',
+                'Presentation': '📊'
+            };
+            return icons[type] || '📄';
+        }
+
+        window.approveMaterial = async (materialId) => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                await supabase.from('study_materials').update({
+                    approval_status: 'approved',
+                    approved_at: new Date().toISOString()
+                }).eq('id', materialId);
+
+                showNotification('Material approved!', 'success');
+                loadPendingMaterials();
+                loadApprovedMaterials();
+                loadTeacherStats();
+            } catch (error) {
+                console.error('Error approving material:', error);
+                showNotification('Error approving material.', 'error');
+            }
+        };
+
+        window.rejectMaterial = async (materialId) => {
+            const reason = prompt('Please provide a reason for rejection:');
+            if (!reason) return;
+
+            try {
+                await supabase.from('study_materials').update({
+                    approval_status: 'rejected'
+                }).eq('id', materialId);
+
+                showNotification('Material rejected.', 'info');
+                loadPendingMaterials();
+                loadTeacherStats();
+            } catch (error) {
+                console.error('Error rejecting material:', error);
+                showNotification('Error rejecting material.', 'error');
+            }
+        };
+
+        window.revokeApproval = async (materialId) => {
+            if (!confirm('Are you sure you want to revoke approval?')) return;
+
+            try {
+                await supabase.from('study_materials').update({
+                    approval_status: 'pending'
+                }).eq('id', materialId);
+
+                showNotification('Approval revoked.', 'info');
+                loadApprovedMaterials();
+                loadTeacherStats();
+            } catch (error) {
+                console.error('Error revoking approval:', error);
+                showNotification('Error revoking approval.', 'error');
+            }
+        };
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 text-white ${type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                    type === 'info' ? 'bg-blue-500' : 'bg-gray-500'
+                }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        window.signOut = async () => {
+            await supabase.auth.signOut();
+            window.location.href = '../index.html';
+        };
+
+        // Expose to global for HTML onclicks
+        window.loadPendingMaterials = loadPendingMaterials;
+    </script>
+    <!-- Global Theme CSS -->
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/mobile-optimizations.css" />
+</head>
+
+<body class="bg-primary dark">
+    <div id="side-menu-container"></div>
+    <div id="universal-navbar-container"></div>
+    <div class="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden"
+        style='font-family: "Space Grotesk", "Noto Sans", sans-serif;'>
+        <div class="absolute inset-0 -z-10 overflow-hidden">
+            <!-- Particle background -->
+            <div class="particle"
+                style="--x-start: 10vw; --y-start: 20vh; --x-end: 90vw; --y-end: 80vh; width: 2px; height: 2px; animation-delay: 0s;">
+            </div>
+            <div class="particle"
+                style="--x-start: 80vw; --y-start: 10vh; --x-end: 20vw; --y-end: 90vh; width: 1px; height: 1px; animation-delay: -1s;">
+            </div>
+            <!-- ... more particles ... -->
+        </div>
+
+        <div class="min-h-screen p-8">
+            <div class="max-w-7xl mx-auto">
+                <!-- Welcome Section -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-primary mb-2" id="welcome-message">Welcome, Teacher!</h1>
+                    <p class="text-secondary">Review and approve study materials submitted by students.</p>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="material-symbols-outlined text-3xl text-accent">pending</span>
+                            <span class="text-2xl font-bold text-accent" id="pending-count">0</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-primary mb-1">Pending Materials</h3>
+                        <p class="text-sm text-secondary">Awaiting review</p>
+                    </div>
+
+                    <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="material-symbols-outlined text-3xl text-accent">check_circle</span>
+                            <span class="text-2xl font-bold text-accent" id="approved-count">0</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-primary mb-1">Approved Materials</h3>
+                        <p class="text-sm text-secondary">Available to students</p>
+                    </div>
+
+                    <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="material-symbols-outlined text-3xl text-accent">school</span>
+                            <span class="text-2xl font-bold text-accent" id="total-students">0</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-primary mb-1">Total Students</h3>
+                        <p class="text-sm text-secondary">Registered users</p>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Pending Materials -->
+                    <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
+                        <h2 class="text-2xl font-bold text-primary mb-6">Pending Review</h2>
+                        <div id="pending-materials" class="space-y-4">
+                            <!-- Pending materials will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Recently Approved -->
+                    <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
+                        <h2 class="text-2xl font-bold text-primary mb-6">Recently Approved</h2>
+                        <div id="approved-materials" class="space-y-3">
+                            <!-- Approved materials will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="mt-8 bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
+                    <h2 class="text-2xl font-bold text-primary mb-6">Quick Actions</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button onclick="loadPendingMaterials()"
+                            class="translucent-button p-4 rounded-lg text-center hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-3xl text-accent mb-2 block">refresh</span>
+                            <span class="font-medium">Refresh Pending</span>
+                        </button>
+                        <button onclick="window.location.href='study-library.html'"
+                            class="translucent-button p-4 rounded-lg text-center hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-3xl text-accent mb-2 block">library_books</span>
+                            <span class="font-medium">View Library</span>
+                        </button>
+                        <button onclick="window.location.href='Dashboard.html'"
+                            class="translucent-button p-4 rounded-lg text-center hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-3xl text-accent mb-2 block">dashboard</span>
+                            <span class="font-medium">Student View</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>

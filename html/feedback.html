@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <title>Feedback - NeuroSync</title>
+    <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="stylesheet" href="../css/global.css" />
+    <link rel="stylesheet" href="../css/mobile-optimizations.css" />
+    <script src="../js/sidemenu.js"></script>
+    <script src="../js/theme.js"></script>
+    <script src="../js/navbar-component.js"></script>
+    <script type="module">
+        import { initFeedback, loadUserFeedback } from '../js/feedback.js';
+        import { supabase } from '../js/supabase.js';
+
+        // Initialize feedback system
+        initFeedback();
+
+        // Check authentication and load profile
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (!session && event !== 'INITIAL_SESSION') {
+                window.location.href = 'auth.html';
+            } else if (session) {
+                await loadUserProfile(session.user);
+                loadUserFeedback();
+            }
+        });
+
+        // Initial check
+        (async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = 'auth.html'; return; }
+            await loadUserProfile(session.user);
+            loadUserFeedback();
+        })();
+
+        async function loadUserProfile(user) {
+            if (!user) return;
+
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('first_name, last_name, class_grade, role')
+                    .eq('id', user.id)
+                    .single();
+
+                const data = profile || {};
+                const displayName = `${data.first_name || ''} ${data.last_name || ''}`.trim() || user.email.split('@')[0] || 'User';
+
+                const elements = {
+                    'display-name': displayName,
+                    'display-email': user.email,
+                    'display-class': data.class_grade || 'Not specified',
+                    'display-role': data.role || 'Student'
+                };
+
+                for (const [id, value] of Object.entries(elements)) {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = value;
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-10 right-10 p-4 rounded-xl shadow-2xl z-[100] text-white animate-fade-in ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+    </script>
+</head>
+
+<body class="bg-primary dark">
+    <div id="side-menu-container"></div>
+    <div id="universal-navbar-container"></div>
+
+    <div class="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden"
+        style='font-family: "Space Grotesk", "Noto Sans", sans-serif;'>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 lg:p-10">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-10">
+                    <h1 class="text-4xl font-bold text-white mb-2">Feedback & Support</h1>
+                    <p class="text-[#ad92c9]">We value your thoughts on how to improve NeuroSync.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Feedback Form Area -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <section
+                            class="bg-[#1a1122]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
+                            <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-accent">edit_note</span>
+                                Share Your Thoughts
+                            </h2>
+                            <form id="feedback-form" class="space-y-6">
+                                <!-- Star Rating -->
+                                <div class="space-y-3">
+                                    <label class="text-sm font-medium text-gray-400">Overall Rating</label>
+                                    <div class="flex gap-2" id="star-rating">
+                                        <span
+                                            class="star text-3xl cursor-pointer text-gray-600 hover:scale-110 transition-transform"
+                                            data-rating="1">☆</span>
+                                        <span
+                                            class="star text-3xl cursor-pointer text-gray-600 hover:scale-110 transition-transform"
+                                            data-rating="2">☆</span>
+                                        <span
+                                            class="star text-3xl cursor-pointer text-gray-600 hover:scale-110 transition-transform"
+                                            data-rating="3">☆</span>
+                                        <span
+                                            class="star text-3xl cursor-pointer text-gray-600 hover:scale-110 transition-transform"
+                                            data-rating="4">☆</span>
+                                        <span
+                                            class="star text-3xl cursor-pointer text-gray-600 hover:scale-110 transition-transform"
+                                            data-rating="5">☆</span>
+                                    </div>
+                                    <input type="hidden" name="rating" id="feedback-rating" required>
+                                </div>
+
+                                <!-- Category & Message -->
+                                <div class="grid grid-cols-1 gap-6">
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-gray-400">Category</label>
+                                        <select id="feedback-type" name="feedback-type" required
+                                            class="w-full bg-black/20 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-accent outline-none">
+                                            <option value="">Select Category</option>
+                                            <option value="Dashboard">Dashboard</option>
+                                            <option value="Mood Tracker">Mood Tracker</option>
+                                            <option value="Study Library">Study Library</option>
+                                            <option value="Performance">Performance</option>
+                                            <option value="Bug Report">Bug Report</option>
+                                            <option value="Feature Request">Feature Request</option>
+                                        </select>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-gray-400">Subject</label>
+                                        <input type="text" id="feedback-subject" name="feedback-subject" required
+                                            placeholder="Brief summary"
+                                            class="w-full bg-black/20 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-accent outline-none">
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-gray-400">Your Feedback</label>
+                                        <textarea id="feedback-message" name="feedback-message" rows="5" required
+                                            placeholder="Tell us more..."
+                                            class="w-full bg-black/20 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-accent outline-none resize-none"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-3 bg-white/5 p-4 rounded-xl border border-white/5">
+                                    <input type="checkbox" name="anonymous" id="anonymous"
+                                        class="rounded bg-black/40 border-white/10 text-accent focus:ring-accent">
+                                    <label for="anonymous" class="text-sm text-gray-300 cursor-pointer">Submit
+                                        anonymously</label>
+                                </div>
+
+                                <button type="submit"
+                                    class="w-full bg-accent hover:bg-accent-secondary text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-accent/20">
+                                    Submit Feedback
+                                </button>
+                            </form>
+                        </section>
+                    </div>
+
+                    <!-- Sidebar Info / User Info / History -->
+                    <div class="space-y-6">
+                        <!-- User Info -->
+                        <div class="bg-[#1a1122]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6">
+                            <h3 class="text-lg font-bold text-white mb-4">Your Identity</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-xs text-gray-400 uppercase tracking-wider">Name</p>
+                                    <p id="display-name" class="text-white font-medium">Loading...</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400 uppercase tracking-wider">Role</p>
+                                    <p id="display-role" class="text-white font-medium">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- History -->
+                        <div class="bg-[#1a1122]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6">
+                            <h3 class="text-lg font-bold text-white mb-4">Recent Activity</h3>
+                            <div id="feedback-history" class="space-y-3">
+                                <!-- Loaded via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- UI Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Star interaction
+            const stars = document.querySelectorAll('.star');
+            const ratingInput = document.getElementById('feedback-rating');
+
+            stars.forEach((star, idx) => {
+                star.addEventListener('click', () => {
+                    const rating = idx + 1;
+                    ratingInput.value = rating;
+                    stars.forEach((s, i) => {
+                        s.textContent = i < rating ? '★' : '☆';
+                        s.classList.toggle('text-yellow-400', i < rating);
+                        s.classList.toggle('text-gray-600', i >= rating);
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>NeuroSync — Connect</title>
+  <meta name="description"
+    content="Sign in or create your free NeuroSync account to unlock AI-powered focus and mental wellbeing tools.">
+
+  <!-- Favicon -->
+  <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/index.css">
+  <link rel="stylesheet" href="../css/mobile-optimizations.css">
+
+  <script src="../js/theme.js"></script>
+
+  <style>
+    /* ── AUTH PAGE OVERRIDES ── */
+    :root {
+      --auth-panel-left: 45%;
+      --auth-transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Base — override global.css purple gradient on .dark */
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body,
+    body.dark,
+    .dark {
+      background: #0A0A0B !important;
+      color: #FAFAFA !important;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    /* Scan-line texture */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg,
+          transparent,
+          transparent 2px,
+          rgba(255, 255, 255, 0.012) 2px,
+          rgba(255, 255, 255, 0.012) 4px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── LAYOUT ── */
+    .auth-wrapper {
+      display: grid;
+      grid-template-columns: var(--auth-panel-left) 1fr;
+      height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── LEFT BRAND PANEL ── */
+    /* Neutralize index.css's 'header' rule that targets all header elements */
+    .auth-brand {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 2.5rem;
+      border-right: 1px solid #27272A !important;
+      overflow: hidden;
+      background: #0A0A0B !important;
+      backdrop-filter: none !important;
+    }
+
+    /* Left panel text colors — explicit white */
+    .auth-brand,
+    .auth-brand * {
+      color: #FAFAFA;
+    }
+
+    .auth-brand .auth-label {
+      color: #A1A1AA;
+    }
+
+    .auth-brand-ghost {
+      position: absolute;
+      font-size: clamp(6rem, 14vw, 11rem);
+      font-weight: 900;
+      line-height: 0.8;
+      letter-spacing: -0.05em;
+      color: rgba(255, 255, 255, 0.025);
+      bottom: 10%;
+      left: -2%;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .auth-brand-accent-bar {
+      width: 48px;
+      height: 3px;
+      background: #F97316;
+      margin-bottom: 1.5rem;
+      animation: bar-grow 0.8s var(--auth-transition) both;
+    }
+
+    @keyframes bar-grow {
+      from {
+        width: 0;
+        opacity: 0;
+      }
+
+      to {
+        width: 48px;
+        opacity: 1;
+      }
+    }
+
+    .brand-slide-in {
+      animation: slide-in-left 0.7s var(--auth-transition) both;
+    }
+
+    @keyframes slide-in-left {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Trust fragments */
+    .trust-fragment {
+      border: 1px solid #27272A;
+      padding: 1.25rem 1.5rem;
+      position: relative;
+      transition: border-color 0.3s;
+    }
+
+    .trust-fragment::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #F97316;
+      transition: width 0.4s ease;
+    }
+
+    .trust-fragment:hover {
+      border-color: #F97316;
+    }
+
+    .trust-fragment:hover::before {
+      width: 100%;
+    }
+
+    /* ── RIGHT FORM PANEL ── */
+    .auth-form-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 3rem;
+      overflow-y: auto;
+      background: #0A0A0B !important;
+      color: #FAFAFA !important;
+      animation: slide-in-right 0.7s var(--auth-transition) both;
+    }
+
+    /* Force all form text to be visible */
+    .auth-form-panel,
+    .auth-form-panel * {
+      color: inherit;
+    }
+
+    .auth-card h1,
+    .auth-card p {
+      color: #FAFAFA;
+    }
+
+    .auth-card p {
+      color: #71717A;
+    }
+
+    @keyframes slide-in-right {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* Form mode transition */
+    .form-section {
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .form-section.exiting {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    /* Inputs */
+    .auth-input {
+      width: 100%;
+      background: #0A0A0B;
+      border: 1px solid #27272A;
+      color: #FAFAFA;
+      padding: 0.875rem 1rem;
+      font-size: 0.875rem;
+      font-family: 'Space Grotesk', sans-serif;
+      outline: none;
+      transition: border-color 0.25s;
+    }
+
+    .auth-input::placeholder {
+      color: #52525B;
+    }
+
+    .auth-input:focus {
+      border-color: #F97316;
+    }
+
+    .auth-input-wrap {
+      position: relative;
+    }
+
+    .auth-input-icon {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #52525B;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      transition: color 0.2s;
+    }
+
+    .auth-input-icon:hover {
+      color: #F97316;
+    }
+
+    /* Label */
+    .auth-label {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #A1A1AA;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Password strength */
+    .strength-bar-wrap {
+      display: flex;
+      gap: 4px;
+      margin-top: 0.5rem;
+      height: 3px;
+    }
+
+    .strength-segment {
+      flex: 1;
+      background: #27272A;
+      transition: background 0.3s ease;
+    }
+
+    .strength-segment.active-1 {
+      background: #EF4444;
+    }
+
+    .strength-segment.active-2 {
+      background: #F97316;
+    }
+
+    .strength-segment.active-3 {
+      background: #EAB308;
+    }
+
+    .strength-segment.active-4 {
+      background: #22C55E;
+    }
+
+    .strength-label {
+      font-size: 0.625rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #52525B;
+      margin-top: 0.375rem;
+      height: 0.75rem;
+      transition: color 0.3s;
+    }
+
+    /* Primary CTA button */
+    .auth-submit {
+      width: 100%;
+      background: #F97316;
+      color: #000;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 0.875rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 1rem;
+      border: none;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .auth-submit::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0);
+      transition: background 0.2s;
+    }
+
+    .auth-submit:hover {
+      background: #fb923c;
+      transform: translateY(-1px);
+    }
+
+    .auth-submit:active {
+      transform: translateY(0);
+    }
+
+    .auth-submit.loading {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    /* Spinner */
+    .btn-spinner {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0, 0, 0, 0.3);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Divider */
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .auth-divider-line {
+      flex: 1;
+      height: 1px;
+      background: #27272A;
+    }
+
+    .auth-divider-text {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #52525B;
+      white-space: nowrap;
+    }
+
+    /* Social buttons */
+    .social-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      padding: 0.75rem;
+      background: #1E1E20;
+      border: 1px solid #27272A;
+      color: #FAFAFA;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.25s, transform 0.2s;
+      position: relative;
+    }
+
+    .social-btn:hover {
+      border-color: #F97316;
+      transform: translateY(-1px);
+    }
+
+    .social-btn.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* Error strip */
+    .auth-error {
+      display: none;
+      border-left: 3px solid #EF4444;
+      background: rgba(239, 68, 68, 0.08);
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      color: #FCA5A5;
+      margin-top: 0.75rem;
+    }
+
+    .auth-error.visible {
+      display: block;
+    }
+
+    /* Toggle text */
+    .auth-toggle-link {
+      color: #F97316;
+      cursor: pointer;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+
+    .auth-toggle-link:hover {
+      opacity: 0.75;
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 1023px) {
+
+      html,
+      body {
+        overflow: auto;
+      }
+
+      .auth-wrapper {
+        grid-template-columns: 1fr;
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .auth-brand {
+        border-right: none;
+        border-bottom: 1px solid #27272A;
+        padding: 1.25rem 1.5rem;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .auth-brand-ghost,
+      .auth-brand-body,
+      .auth-brand-trust {
+        display: none;
+      }
+
+      .auth-brand-top {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .auth-form-panel {
+        padding: 2.5rem 1.5rem;
+      }
+    }
+
+    /* ── LIGHT MODE ── */
+    body.light {
+      background: #F4F4F5 !important;
+    }
+
+    body.light::after {
+      background: repeating-linear-gradient(0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.015) 2px,
+          rgba(0, 0, 0, 0.015) 4px);
+    }
+
+    body.light .auth-brand {
+      border-right-color: #D4D4D8;
+      background: #FAFAFA;
+    }
+
+    body.light .auth-brand-ghost {
+      color: rgba(0, 0, 0, 0.04);
+    }
+
+    body.light .trust-fragment {
+      border-color: #D4D4D8;
+      background: #FFF;
+    }
+
+    body.light .trust-fragment:hover {
+      border-color: #F97316;
+    }
+
+    body.light .auth-form-panel {
+      background: #F4F4F5;
+    }
+
+    body.light .auth-input {
+      background: #FFF;
+      border-color: #D4D4D8;
+      color: #09090B;
+    }
+
+    body.light .auth-input::placeholder {
+      color: #A1A1AA;
+    }
+
+    body.light .auth-input:focus {
+      border-color: #F97316;
+    }
+
+    body.light .auth-label {
+      color: #71717A;
+    }
+
+    body.light .auth-divider-line {
+      background: #D4D4D8;
+    }
+
+    body.light .social-btn {
+      background: #FFF;
+      border-color: #D4D4D8;
+      color: #09090B;
+    }
+
+    body.light .auth-brand h2,
+    body.light .auth-brand p,
+    body.light #form-title {
+      color: #09090B;
+    }
+
+    body.light #form-subtitle,
+    body.light .auth-toggle {
+      color: #52525B;
+    }
+
+    body.light .translucent-button {
+      background: #E4E4E7 !important;
+      border-color: #D4D4D8 !important;
+      color: #09090B !important;
+    }
+
+    body.light header {
+      background: rgba(244, 244, 245, 0.9) !important;
+      border-color: #D4D4D8 !important;
+    }
+
+    body.light .strength-segment {
+      background: #D4D4D8;
+    }
+  </style>
+</head>
+
+<body class="bg-primary dark">
+
+  <!-- Signal Orange Particles -->
+  <div class="fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
+    <div class="particle"
+      style="--x-start:8vw;--y-start:15vh;--x-end:88vw;--y-end:82vh;width:2px;height:2px;animation-delay:0s;"></div>
+    <div class="particle"
+      style="--x-start:78vw;--y-start:8vh; --x-end:18vw;--y-end:88vh;width:1px;height:1px;animation-delay:-3s;"></div>
+    <div class="particle"
+      style="--x-start:4vw; --y-start:88vh;--x-end:94vw;--y-end:6vh; width:3px;height:3px;animation-delay:-6s;"></div>
+    <div class="particle"
+      style="--x-start:93vw;--y-start:80vh;--x-end:4vw; --y-end:12vh;width:2px;height:2px;animation-delay:-9s;"></div>
+    <div class="particle"
+      style="--x-start:48vw;--y-start:4vh; --x-end:52vw;--y-end:96vh;width:1px;height:1px;animation-delay:-12s;"></div>
+    <div class="particle"
+      style="--x-start:22vw;--y-start:60vh;--x-end:72vw;--y-end:30vh;width:2px;height:2px;animation-delay:-15s;"></div>
+    <div class="particle"
+      style="--x-start:62vw;--y-start:42vh;--x-end:14vw;--y-end:70vh;width:1px;height:1px;animation-delay:-18s;"></div>
+    <div class="particle"
+      style="--x-start:35vw;--y-start:78vh;--x-end:85vw;--y-end:20vh;width:3px;height:3px;animation-delay:-21s;"></div>
+    <!-- Ambient glow blob -->
+    <div
+      style="position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(249,115,22,0.06),transparent 70%);top:30%;left:40%;filter:blur(60px);pointer-events:none;">
+    </div>
+  </div>
+
+  <div class="auth-wrapper">
+
+    <!-- ══ LEFT BRAND PANEL ══ -->
+    <aside class="auth-brand">
+      <!-- Top: Logo + nav controls -->
+      <div class="auth-brand-top flex items-center justify-between">
+        <a href="../index.html" class="flex items-center gap-3 brand-slide-in">
+          <img src="../assets/Navbar_logo copy.png" alt="NeuroSync Logo" class="h-10 w-auto">
+        </a>
+        <div class="flex items-center gap-2">
+          <button id="theme-toggle"
+            class="translucent-button flex items-center justify-center size-10 hover:scale-110 transition-transform"
+            aria-label="Toggle theme">
+            <span class="material-symbols-outlined text-xl">dark_mode</span>
+          </button>
+          <button onclick="window.location.href='../index.html'"
+            class="translucent-button flex items-center justify-center size-10" aria-label="Back to home">
+            <span class="material-symbols-outlined text-xl">arrow_back</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Body: tagline + trust -->
+      <div class="auth-brand-body brand-slide-in" style="animation-delay:0.2s;">
+        <div class="auth-brand-accent-bar"></div>
+        <span style="font-size:0.65rem;letter-spacing:0.5em;text-transform:uppercase;color:#F97316;font-weight:700;">
+          Personal AI Companion
+        </span>
+        <h2 id="form-title" class="mt-3 mb-4"
+          style="font-size:clamp(2rem,4vw,3rem);font-weight:700;line-height:1.1;letter-spacing:-0.02em;">
+          Sync Your Mind.<br>Unlock Pure Focus.
+        </h2>
+        <p style="color:#A1A1AA;font-size:0.9rem;line-height:1.65;max-width:320px;">
+          NeuroSync uses advanced neural patterns to harmonize your study environment. Not just a timer — a biological
+          synchronizer.
+        </p>
+      </div>
+
+      <!-- Trust fragments -->
+      <div class="auth-brand-trust brand-slide-in" style="animation-delay:0.3s;">
+        <div class="grid grid-cols-3 gap-3">
+          <div class="trust-fragment">
+            <div style="font-size:1.4rem;font-weight:700;color:#F97316;">12k+</div>
+            <div
+              style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#71717A;margin-top:0.25rem;">
+              Active Users</div>
+          </div>
+          <div class="trust-fragment">
+            <div style="font-size:1.4rem;font-weight:700;color:#F97316;">4.8★</div>
+            <div
+              style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#71717A;margin-top:0.25rem;">
+              User Rating</div>
+          </div>
+          <div class="trust-fragment">
+            <div style="font-size:1.4rem;font-weight:700;color:#F97316;">Free</div>
+            <div
+              style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:#71717A;margin-top:0.25rem;">
+              Forever</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ghost text -->
+      <div class="auth-brand-ghost" aria-hidden="true">AUTH</div>
+    </aside>
+
+    <!-- ══ RIGHT FORM PANEL ══ -->
+    <section class="auth-form-panel" id="auth-panel">
+      <div class="auth-card">
+
+        <!-- Mode indicator -->
+        <div style="display:flex;gap:1px;margin-bottom:2rem;">
+          <button id="tab-signup"
+            style="flex:1;padding:0.625rem;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;font-family:'Space Grotesk',sans-serif;background:#F97316;color:#000;border:none;cursor:pointer;transition:all 0.25s;">
+            Create Account
+          </button>
+          <button id="tab-signin"
+            style="flex:1;padding:0.625rem;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;font-family:'Space Grotesk',sans-serif;background:#1E1E20;color:#71717A;border:none;cursor:pointer;border:1px solid #27272A;transition:all 0.25s;">
+            Sign In
+          </button>
+        </div>
+
+        <!-- Form title + subtitle -->
+        <div class="form-section mb-6" id="header-section">
+          <h1 id="form-title"
+            style="font-size:1.625rem;font-weight:700;letter-spacing:-0.02em;color:#FAFAFA;margin-bottom:0.375rem;">
+            Create Your Free Account
+          </h1>
+          <p id="form-subtitle" style="font-size:0.8rem;color:#71717A;">
+            Unlock your potential with NeuroSync. It's free forever.
+          </p>
+        </div>
+
+        <!-- Auth Form -->
+        <form id="auth-form" class="form-section" novalidate>
+
+          <!-- Name field (signup only) -->
+          <div class="space-y-1 mb-4" id="name-field">
+            <label class="auth-label" for="display-name">Full Name</label>
+            <input class="auth-input" id="display-name" type="text" placeholder="Alex Johnson" autocomplete="name">
+          </div>
+
+          <!-- Email -->
+          <div class="space-y-1 mb-4">
+            <label class="auth-label" for="email">Email</label>
+            <input class="auth-input" id="email" type="email" placeholder="you@example.com" autocomplete="email">
+          </div>
+
+          <!-- Password -->
+          <div class="space-y-1 mb-1">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <label class="auth-label" for="password">Password</label>
+              <a id="forgot-link" href="#"
+                style="font-size:0.65rem;color:#52525B;letter-spacing:0.08em;text-decoration:none;display:none;transition:color 0.2s;"
+                onmouseover="this.style.color='#F97316'" onmouseout="this.style.color='#52525B'">
+                Forgot Password?
+              </a>
+            </div>
+            <div class="auth-input-wrap">
+              <input class="auth-input" id="password" type="password" placeholder="••••••••" autocomplete="new-password"
+                style="padding-right:3rem;">
+              <button class="auth-input-icon" id="toggle-password" type="button"
+                aria-label="Toggle password visibility">
+                <span class="material-symbols-outlined" style="font-size:1.125rem;">visibility</span>
+              </button>
+            </div>
+            <!-- Password strength (signup only) -->
+            <div id="strength-container">
+              <div class="strength-bar-wrap">
+                <div class="strength-segment" id="seg1"></div>
+                <div class="strength-segment" id="seg2"></div>
+                <div class="strength-segment" id="seg3"></div>
+                <div class="strength-segment" id="seg4"></div>
+              </div>
+              <div class="strength-label" id="strength-label"></div>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <button class="auth-submit mt-5" id="submit-button" type="submit">
+            <span id="btn-text">Create Account</span>
+            <div class="btn-spinner" id="btn-spinner"></div>
+          </button>
+
+          <!-- Error -->
+          <div class="auth-error" id="error-message" role="alert"></div>
+        </form>
+
+        <!-- Divider -->
+        <div class="auth-divider">
+          <div class="auth-divider-line"></div>
+          <span class="auth-divider-text">Or continue with</span>
+          <div class="auth-divider-line"></div>
+        </div>
+
+        <!-- Social -->
+        <div class="social-grid">
+          <button id="google-signin" class="social-btn" type="button" aria-label="Sign in with Google">
+            <svg class="shrink-0" width="16" height="16" viewBox="0 0 488 512" xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true">
+              <path
+                d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-76.2 76.2C324.7 122.3 289.2 106.8 248 106.8c-70.4 0-128.2 57.8-128.2 128.2s57.8 128.2 128.2 128.2c80.3 0 115.4-59.4 119.5-87.2H248v-95.6h239.3c-4.9 23.2-15.9 51.6-40.2 75.6z"
+                fill="currentColor" />
+            </svg>
+            <span>Google</span>
+          </button>
+
+          <!-- Apple — coming soon -->
+          <button class="social-btn disabled" type="button" title="Coming Soon" aria-label="Apple Sign In coming soon">
+            <svg class="shrink-0" width="14" height="16" viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true">
+              <path
+                d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C39.2 141.6 0 184.2 0 241.2c0 61.6 40.2 153.2 88.5 204.3 26.2 28.5 55.5 58.3 90.5 58.3 35.2 0 49.4-18.5 82.5-18.5 33.7 0 47.4 18.5 82.5 18.5s54.5-29.8 80.5-58.3c15.2-16.6 25.3-34.8 29.8-51.4-40.4-23.4-62.4-62.4-62.4-101.4zM282.5 101.6c-16.6-18.5-35.2-31.5-56.5-31.5-20.2 0-36.9 14.5-50.5 31.5-12.7 15.5-22.8 34.2-22.8 54.5 0 20.8 9.3 39.5 22.8 53.5 13.5 14.2 30.2 25.2 50.5 25.2 21.2 0 40.2-11.2 56.5-25.2 14.2-15.5 22.8-34.2 22.8-53.5.1-20.3-9.5-39-22.8-54.5z"
+                fill="currentColor" />
+            </svg>
+            <span>Apple</span>
+          </button>
+
+          <!-- Facebook — coming soon -->
+          <button class="social-btn disabled" type="button" title="Coming Soon"
+            aria-label="Facebook Sign In coming soon">
+            <svg class="shrink-0" width="14" height="16" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true">
+              <path
+                d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14 0 55.52 4.84 55.52 4.84v61h-31.28c-30.8 0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z"
+                fill="currentColor" />
+            </svg>
+            <span>Facebook</span>
+          </button>
+        </div>
+
+        <!-- Toggle -->
+        <p class="auth-toggle mt-6 text-center" style="font-size:0.8rem;color:#71717A;" id="auth-toggle">
+          Already have an account?
+          <span class="auth-toggle-link" id="toggle-mode">Sign In</span>
+        </p>
+
+      </div>
+    </section>
+
+  </div>
+
+  <script type="module" src="../js/auth.js"></script>
+
+  <script>
+    // ── THEME TOGGLE ──
+    (function () {
+      const btn = document.getElementById('theme-toggle');
+      if (!btn) return;
+      const icon = btn.querySelector('span');
+      function applyTheme(t) {
+        document.body.classList.toggle('dark', t === 'dark');
+        document.body.classList.toggle('light', t === 'light');
+        icon.textContent = t === 'light' ? 'light_mode' : 'dark_mode';
+        localStorage.setItem('theme', t);
+      }
+      applyTheme(localStorage.getItem('theme') || 'dark');
+      btn.addEventListener('click', () =>
+        applyTheme(document.body.classList.contains('light') ? 'dark' : 'light')
+      );
+    })();
+
+    // ── SIGN UP / SIGN IN TOGGLE ──
+    const isSignUp = { val: true };
+
+    const tabSignup = document.getElementById('tab-signup');
+    const tabSignin = document.getElementById('tab-signin');
+    const nameField = document.getElementById('name-field');
+    const forgotLink = document.getElementById('forgot-link');
+    const strengthCtr = document.getElementById('strength-container');
+    const formTitle = document.getElementById('form-title');
+    const formSub = document.getElementById('form-subtitle');
+    const btnText = document.getElementById('btn-text');
+    const toggleText = document.getElementById('toggle-mode');
+    const togglePara = document.getElementById('auth-toggle');
+    const headerSec = document.getElementById('header-section');
+    const authForm = document.getElementById('auth-form');
+
+    function switchTo(signup) {
+      isSignUp.val = signup;
+
+      // Tab UI
+      tabSignup.style.background = signup ? '#F97316' : '#1E1E20';
+      tabSignup.style.color = signup ? '#000' : '#71717A';
+      tabSignin.style.background = signup ? '#1E1E20' : '#F97316';
+      tabSignin.style.color = signup ? '#71717A' : '#000';
+
+      // Cross-fade
+      [headerSec, authForm].forEach(el => el.classList.add('exiting'));
+      setTimeout(() => {
+        formTitle.textContent = signup ? 'Create Your Free Account' : 'Welcome Back';
+        formSub.textContent = signup
+          ? 'Unlock your potential with NeuroSync. It\'s free forever.'
+          : 'Sign in to continue your focus journey.';
+        btnText.textContent = signup ? 'Create Account' : 'Sign In';
+        togglePara.innerHTML = signup
+          ? 'Already have an account? <span class="auth-toggle-link" id="toggle-mode">Sign In</span>'
+          : 'New to NeuroSync? <span class="auth-toggle-link" id="toggle-mode">Create Account</span>';
+        document.getElementById('toggle-mode').addEventListener('click', () => switchTo(!isSignUp.val));
+
+        nameField.style.display = signup ? 'block' : 'none';
+        strengthCtr.style.display = signup ? 'block' : 'none';
+        forgotLink.style.display = signup ? 'none' : 'inline';
+
+        const pwInput = document.getElementById('password');
+        pwInput.setAttribute('autocomplete', signup ? 'new-password' : 'current-password');
+
+        [headerSec, authForm].forEach(el => el.classList.remove('exiting'));
+        clearError();
+      }, 250);
+    }
+
+    tabSignup.addEventListener('click', () => switchTo(true));
+    tabSignin.addEventListener('click', () => switchTo(false));
+    document.getElementById('toggle-mode').addEventListener('click', () => switchTo(!isSignUp.val));
+
+    // ── PASSWORD VISIBILITY ──
+    const pwInput = document.getElementById('password');
+    const togglePw = document.getElementById('toggle-password');
+    const pwIcon = togglePw.querySelector('span');
+
+    togglePw.addEventListener('click', () => {
+      const show = pwInput.type === 'password';
+      pwInput.type = show ? 'text' : 'password';
+      pwIcon.textContent = show ? 'visibility_off' : 'visibility';
+    });
+
+    // ── PASSWORD STRENGTH ──
+    const segments = [
+      document.getElementById('seg1'),
+      document.getElementById('seg2'),
+      document.getElementById('seg3'),
+      document.getElementById('seg4'),
+    ];
+    const strengthLabel = document.getElementById('strength-label');
+    const levels = [
+      { label: '', color: '' },
+      { label: 'Weak', color: 'active-1' },
+      { label: 'Fair', color: 'active-2' },
+      { label: 'Good', color: 'active-3' },
+      { label: 'Strong', color: 'active-4' },
+    ];
+    const labelColors = ['', '#EF4444', '#F97316', '#EAB308', '#22C55E'];
+
+    function getStrength(pw) {
+      if (!pw) return 0;
+      let s = 0;
+      if (pw.length >= 6) s++;
+      if (pw.length >= 10) s++;
+      if (/[^a-zA-Z0-9]/.test(pw)) s++;
+      if (/[A-Z]/.test(pw) && /[0-9]/.test(pw)) s++;
+      return Math.min(s, 4);
+    }
+
+    pwInput.addEventListener('input', () => {
+      if (!isSignUp.val) return;
+      const lvl = getStrength(pwInput.value);
+      segments.forEach((seg, i) => {
+        seg.className = 'strength-segment';
+        if (i < lvl) seg.classList.add(levels[lvl].color);
+      });
+      strengthLabel.textContent = pwInput.value ? levels[lvl].label : '';
+      strengthLabel.style.color = labelColors[lvl];
+    });
+
+    // ── ERROR HANDLING ──
+    function showError(msg) {
+      const el = document.getElementById('error-message');
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+
+    function clearError() {
+      const el = document.getElementById('error-message');
+      el.textContent = '';
+      el.classList.remove('visible');
+    }
+
+    // ── SUBMIT STATE ──
+    function setLoading(on) {
+      const btn = document.getElementById('submit-button');
+      const spinner = document.getElementById('btn-spinner');
+      btn.classList.toggle('loading', on);
+      btn.disabled = on;
+      btnText.style.display = on ? 'none' : 'block';
+      spinner.style.display = on ? 'block' : 'none';
+    }
+
+    // Expose helpers for auth.js
+    window.authPage = { showError, clearError, setLoading, isSignUp };
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <title>Study Vault // Swiss Brutalism</title>
+
+    <!-- Custom Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;700;900&family=Space+Grotesk:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <!-- Custom CSS Base -->
+    <link rel="stylesheet" href="../css/global.css">
+    <style>
+        :root {
+            --bg-obsidian: #000000;
+            --text-primary: #FFFFFF;
+            --accent-signal: #EF4444;
+            /* Signal Red */
+        }
+
+        body {
+            background-color: var(--bg-obsidian);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .serif-display {
+            font-family: 'Instrument Serif', serif;
+        }
+
+        .font-mono {
+            font-family: 'Space Grotesk', monospace;
+        }
+
+        .asymmetric-tension {
+            margin-left: 8%;
+        }
+
+        @media (max-width: 1024px) {
+            .asymmetric-tension {
+                margin-left: 0;
+            }
+        }
+
+        /* Brutalist Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-signal);
+        }
+
+        .flicker-text:hover {
+            animation: flicker 0.2s infinite;
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <!-- Scripts -->
+    <script src="../js/sidemenu.js"></script>
+    <script src="../js/theme.js"></script>
+    <script src="../js/navbar-component.js"></script>
+    <script type="module">
+        import { supabase } from '../js/supabase.js';
+
+        // Check authentication
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (!session && event !== 'INITIAL_SESSION') {
+                window.location.href = 'auth.html';
+            } else if (session) {
+                // Initialize study library
+                import('../js/study-library.js').then(module => {
+                    module.initStudyLibrary();
+                });
+            }
+        });
+
+        // Initial check
+        (async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) window.location.href = 'auth.html';
+        })();
+    </script>
+</head>
+
+<body class="bg-black text-white selection:bg-red-500 selection:text-black">
+    <div id="side-menu-container"></div>
+    <div id="universal-navbar-container"></div>
+
+    <div class="flex">
+        <main class="flex-1 transition-all duration-300 w-full" id="main-content">
+
+            <!-- Vault Header -->
+            <div class="w-full border-b border-white/10 pt-32 pb-24 px-6 lg:px-12 relative bg-black">
+                <!-- Architectural Branding -->
+                <div
+                    class="absolute top-0 right-0 p-12 text-[9px] font-black uppercase tracking-[0.6em] text-white/20 hidden lg:block">
+                    PRO_INTEL_ARCHIVE // 0x4E2
+                </div>
+
+                <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-end justify-between gap-16">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-4 mb-8">
+                            <span class="h-px w-12 bg-red-600"></span>
+                            <span
+                                class="text-red-500 font-black tracking-[0.5em] uppercase text-[10px]">VAULT_INDEX_01</span>
+                        </div>
+                        <h1
+                            class="text-[clamp(4.5rem,14vw,11rem)] serif-display leading-[0.82] italic font-normal tracking-tighter">
+                            Study <br> <span class="not-italic text-white">Archives.</span>
+                        </h1>
+                    </div>
+
+                    <!-- System Diagnostics -->
+                    <div
+                        class="w-full lg:w-64 text-left lg:text-right flex flex-row lg:flex-col justify-between gap-6 border-l lg:border-l-0 lg:border-r border-white/10 lg:pr-8 pl-8 lg:pl-0">
+                        <div>
+                            <div class="text-[9px] font-black uppercase tracking-widest text-white/30 mb-2">Sync_Status
+                            </div>
+                            <div
+                                class="text-xs font-bold text-red-500 font-mono flex items-center lg:justify-end gap-2">
+                                <span class="w-1.5 h-1.5 bg-red-600 animate-pulse"></span>
+                                ARCHIVING
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-[9px] font-black uppercase tracking-widest text-white/30 mb-2">Network_Load
+                            </div>
+                            <div class="text-xs font-bold font-mono text-white/80 tracking-tighter uppercase">0x8F //
+                                STABLE</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full max-w-7xl mx-auto py-24 px-6 lg:px-12 asymmetric-tension">
+
+                <!-- Query / Search Section -->
+                <div class="mb-32 relative">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+                        <div class="lg:col-span-8 group">
+                            <label for="search-input"
+                                class="block text-[9px] tracking-[0.8em] font-black uppercase text-red-500 mb-8 italic">Query_Vault_Database</label>
+                            <input type="text" id="search-input" placeholder="INITIATE SEARCH..."
+                                class="w-full bg-transparent border-b-4 border-white text-5xl lg:text-7xl font-black text-white placeholder:text-white/5 focus:border-red-600 outline-none transition-all rounded-none serif-display p-0 pb-6 uppercase"
+                                onkeyup="searchMaterials()">
+                            <div class="mt-4 flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                                <span class="text-[10px] text-white/20 font-mono whitespace-nowrap">PARAMS: [SUBJECT,
+                                    CLASS, AUTHOR]</span>
+                            </div>
+                        </div>
+
+                        <!-- Filter Matrix -->
+                        <div class="lg:col-span-4 flex flex-col gap-12 lg:items-end">
+                            <div class="text-[9px] tracking-[0.5em] font-black uppercase text-white/20">Filter_Matrix
+                            </div>
+                            <div class="flex flex-wrap gap-2 lg:justify-end">
+                                <button id="filter-all" onclick="filterMaterials('all')"
+                                    class="filter-btn px-6 py-2 border-2 border-white text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all bg-transparent">All_Index</button>
+                                <button id="filter-Mathematics" onclick="filterMaterials('Mathematics')"
+                                    class="filter-btn px-6 py-2 border-2 border-white text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all bg-transparent">Mathematics</button>
+                                <button id="filter-Science" onclick="filterMaterials('Science')"
+                                    class="filter-btn px-6 py-2 border-2 border-white text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all bg-transparent">Science</button>
+                            </div>
+                            <a href="upload-material.html"
+                                class="mt-4 px-8 py-3 bg-red-600 text-black text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white transition-all flex items-center gap-3 w-full lg:w-auto justify-center">
+                                <span class="material-symbols-outlined text-sm">add</span>
+                                Add_Fragment
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Architectural Grid for Materials -->
+                <div class="relative">
+                    <div class="flex items-center gap-6 mb-16">
+                        <div class="h-[2px] w-24 bg-red-600"></div>
+                        <h2 class="text-xs font-black uppercase tracking-[0.6em] text-white/40 italic">ARCHIVE_STREAM
+                        </h2>
+                    </div>
+
+                    <div id="materials-container"
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-24 gap-x-12">
+                        <!-- Dynamic Injection -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Brutalist Footer Footer -->
+            <footer class="mt-40 border-t border-white/10 py-20 px-6 lg:px-12 bg-black">
+                <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start gap-12">
+                    <div class="serif-display text-4xl italic text-white/20">
+                        NeuroSync. <br> <span class="not-italic">Vault.</span>
+                    </div>
+                    <div class="text-[9px] font-mono text-white/40 leading-loose uppercase tracking-widest">
+                        System_Time: <span id="sys-time">2026.03.06 // 14:15:32</span> <br>
+                        Location: [REGION_ASIA_SOUTH_01] <br>
+                        Security: [LEVEL_ALPHA_ENCRYPTED]
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // Update Sys Time
+        setInterval(() => {
+            const now = new Date();
+            const format = now.getFullYear() + '.' +
+                String(now.getMonth() + 1).padStart(2, '0') + '.' +
+                String(now.getDate()).padStart(2, '0') + ' // ' +
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0') + ':' +
+                String(now.getSeconds()).padStart(2, '0');
+            const el = document.getElementById('sys-time');
+            if (el) el.innerText = format;
+        }, 1000);
+    </script>
+</body>
+
+</html>

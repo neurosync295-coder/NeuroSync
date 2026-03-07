@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <title>Profile - NeuroSync</title>
+  <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/mobile-optimizations.css" />
+  <script src="../js/sidemenu.js"></script>
+  <script src="../js/theme.js"></script>
+  <script src="../js/navbar-component.js"></script>
+</head>
+
+<body class="bg-primary dark">
+  <div id="side-menu-container"></div>
+  <div id="universal-navbar-container"></div>
+
+  <div class="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden"
+    style='font-family: "Space Grotesk", "Noto Sans", sans-serif;'>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 lg:p-10">
+      <div class="max-w-6xl mx-auto">
+        <!-- Unboxed Asymmetric Layout -->
+        <div class="flex flex-col lg:flex-row gap-12 w-full">
+
+          <!-- Left Column: Brutalist Profile Image & Stats (30%) -->
+          <div class="w-full lg:w-[30%] flex flex-col pt-8">
+            <div class="relative w-full aspect-square mb-8 group">
+              <!-- Sharp offset border backplate -->
+              <div
+                class="absolute inset-0 bg-accent translate-x-4 translate-y-4 rounded-sm transition-transform group-hover:translate-x-5 group-hover:translate-y-5">
+              </div>
+              <!-- Profile Image Front Plate -->
+              <div
+                class="absolute inset-0 bg-primary border bg-secondary border-border-primary rounded-sm overflow-hidden z-10">
+                <img src="" alt="Profile" id="profile-photo-preview"
+                  class="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500" />
+                <div id="photo-placeholder-text"
+                  class="absolute inset-0 flex items-center justify-center text-text-muted text-sm font-bold uppercase tracking-widest hidden">
+                  No Photo</div>
+              </div>
+              <!-- Edit Action -->
+              <button id="change-photo-button"
+                class="absolute -bottom-3 -right-3 z-20 bg-primary border-2 border-accent text-accent w-12 h-12 flex items-center justify-center rounded-none shadow-accent-lg hover:bg-accent hover:text-white transition-all transform origin-center hover:rotate-6">
+                <span class="material-symbols-outlined font-bold">add_a_photo</span>
+              </button>
+            </div>
+
+            <div class="border-l-4 border-accent pl-5 mb-8">
+              <h2 class="text-4xl font-bold text-text-primary tracking-tight" id="display-name">Loading...</h2>
+              <p class="text-text-secondary text-xs uppercase tracking-widest font-black mt-2" id="display-role">Student
+              </p>
+            </div>
+
+            <!-- Decorative tech details -->
+            <div class="font-mono text-[10px] text-text-muted hidden lg:block uppercase tracking-widest space-y-1">
+              <p>ID_SEC: 0x892A</p>
+              <p>STATUS: ACTIVE</p>
+              <p>SYNC_RATE: 100%</p>
+              <div class="w-full h-px bg-white/10 mt-6 pt-4 border-b border-border-raw"></div>
+            </div>
+          </div>
+
+          <!-- Right Column: Minimalist Forms (70%) -->
+          <div class="w-full lg:w-[70%] pt-8 lg:border-l border-border-raw lg:pl-12">
+
+            <div
+              class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 border-b border-border-raw pb-6">
+              <div>
+                <h1 class="text-[10px] uppercase tracking-[0.2em] text-accent font-bold mb-2">Systems / Identity</h1>
+                <h3 class="text-3xl font-bold text-text-primary">Personal Data</h3>
+              </div>
+              <div class="flex gap-3 mt-6 sm:mt-0">
+                <button id="edit-button"
+                  class="border border-border-raw text-text-secondary hover:text-text-primary hover:border-accent hover:bg-accent/10 py-2 px-6 rounded-none text-xs font-bold uppercase tracking-widest transition-all focus:outline-none">
+                  Access Data
+                </button>
+                <button id="save-button"
+                  class="border flex items-center gap-2 border-accent bg-accent/10 text-accent hover:bg-accent hover:text-white py-2 px-6 rounded-none text-xs font-bold uppercase tracking-widest transition-all focus:outline-none shadow-[0_0_15px_rgba(249,115,22,0.15)] hidden"
+                  style="display: none;">
+                  <span class="w-2 h-2 rounded-full bg-current animate-pulse"></span> Commit
+                </button>
+              </div>
+            </div>
+
+            <form id="profile-form" class="space-y-8">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+
+                <!-- Brutalist Input 1 -->
+                <div class="relative group">
+                  <input type="text" id="firstName" readonly placeholder=" "
+                    class="block w-full bg-transparent border-0 border-b border-border-raw text-text-primary text-xl px-0 py-3 appearance-none focus:outline-none focus:ring-0 focus:border-accent peer readonly:text-text-muted transition-colors">
+                  <label for="firstName"
+                    class="absolute text-xs uppercase font-bold tracking-widest text-text-muted duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-accent peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">First
+                    Name</label>
+                </div>
+
+                <!-- Brutalist Input 2 -->
+                <div class="relative group">
+                  <input type="text" id="lastName" readonly placeholder=" "
+                    class="block w-full bg-transparent border-0 border-b border-border-raw text-text-primary text-xl px-0 py-3 appearance-none focus:outline-none focus:ring-0 focus:border-accent peer readonly:text-text-muted transition-colors">
+                  <label for="lastName"
+                    class="absolute text-xs uppercase font-bold tracking-widest text-text-muted duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-accent peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Last
+                    Name</label>
+                </div>
+
+                <!-- Brutalist Input 3 -->
+                <div class="relative group">
+                  <input type="number" id="age" readonly placeholder=" "
+                    class="block w-full bg-transparent border-0 border-b border-border-raw text-text-primary text-xl px-0 py-3 appearance-none focus:outline-none focus:ring-0 focus:border-accent peer readonly:text-text-muted transition-colors">
+                  <label for="age"
+                    class="absolute text-xs uppercase font-bold tracking-widest text-text-muted duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-accent peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Age
+                    / Cycle</label>
+                </div>
+
+                <!-- Brutalist Input 4 -->
+                <div class="relative group">
+                  <input type="text" id="classGrade" readonly placeholder=" "
+                    class="block w-full bg-transparent border-0 border-b border-border-raw text-text-primary text-xl px-0 py-3 appearance-none focus:outline-none focus:ring-0 focus:border-accent peer readonly:text-text-muted transition-colors">
+                  <label for="classGrade"
+                    class="absolute text-xs uppercase font-bold tracking-widest text-text-muted duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-accent peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Designation</label>
+                </div>
+
+                <!-- Brutalist Select -->
+                <div class="relative group md:col-span-2 mt-4 pt-4 border-t border-dashed border-border-raw">
+                  <p class="text-[10px] uppercase font-bold tracking-[0.2em] text-text-muted mb-4 opacity-70">System
+                    Privileges</p>
+                  <select id="role" disabled
+                    class="block w-full bg-transparent border-l-4 border-y-0 border-r-0 border-border-raw text-text-primary text-xl px-4 py-3 focus:outline-none focus:ring-0 focus:border-accent peer disabled:text-text-muted transition-colors appearance-none cursor-pointer">
+                    <option value="Student" class="bg-primary text-text-primary">Student User</option>
+                    <option value="Teacher" class="bg-primary text-text-primary">Teacher Admin</option>
+                    <option value="Parent" class="bg-primary text-text-primary">Parent Observer</option>
+                  </select>
+                </div>
+
+                <input id="photoUrl" type="hidden" />
+                <input type="file" id="profile-photo-input" accept="image/*" class="hidden" />
+              </div>
+              <div id="message"
+                class="hidden p-4 bg-accent/10 border-l-4 border-accent text-text-primary uppercase text-xs tracking-widest font-bold font-mono">
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- UI Logic -->
+  <script type="module" src="../js/profile.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const editBtn = document.getElementById('edit-button');
+      const saveBtn = document.getElementById('save-button');
+      const inputs = document.querySelectorAll('#profile-form input, #profile-form select');
+      const changePhotoBtn = document.getElementById('change-photo-button');
+
+      editBtn.addEventListener('click', () => {
+        inputs.forEach(i => {
+          if (i.id !== 'photoUrl') {
+            i.removeAttribute('readonly');
+            i.removeAttribute('disabled');
+            i.classList.add('border-accent', 'text-text-primary');
+            if (i.tagName === 'SELECT') {
+              i.classList.remove('border-border-raw');
+              i.classList.add('border-accent');
+            }
+          }
+        });
+        editBtn.style.display = 'none';
+        saveBtn.style.display = 'flex';
+      });
+
+      saveBtn.addEventListener('click', () => {
+        if (typeof saveProfile === 'function') saveProfile();
+        inputs.forEach(i => {
+          i.setAttribute('readonly', true);
+          if (i.tagName === 'SELECT') {
+            i.setAttribute('disabled', true);
+            i.classList.add('border-border-raw');
+          }
+          i.classList.remove('border-accent', 'text-text-primary');
+        });
+        saveBtn.style.display = 'none';
+        editBtn.style.display = 'flex';
+      });
+
+      changePhotoBtn.addEventListener('click', () => {
+        if (typeof openUploadWidget === 'function') openUploadWidget();
+      });
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroSync - Mood Tracker</title>
+  <meta name="description" content="Track and understand your emotions with NeuroSync's AI-powered mood tracker." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="../js/sidemenu.js"></script>
+  <script src="../js/theme.js"></script>
+  <script src="../js/navbar-component.js"></script>
+  <!-- Supabase Integration -->
+  <style type="text/tailwindcss">
+    /* Specific Chat Styles */    /* Sidebar */
+    .chat-sidebar {
+      width: 280px;
+      min-width: 280px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      z-index: 30;
+    }
+
+    @media (max-width: 1023px) {
+      .chat-sidebar {
+        position: fixed;
+        top: 0; left: 0; bottom: 0;
+        transform: translateX(-100%);
+      }
+      .chat-sidebar.open {
+        transform: translateX(0);
+        box-shadow: 6px 0 30px rgba(0,0,0,0.6);
+      }
+    }
+
+    /* Chat layout */
+    .ai-chat-layout {
+      display: flex;
+      height: calc(100vh - 64px);
+      overflow: hidden;
+      background: var(--bg-primary);
+    }
+
+    /* Message bubbles */
+    .msg-user {
+      background: linear-gradient(135deg,#9333ea,#7e22ce);
+      color: white;
+      border-radius: 18px 18px 4px 18px;
+      box-shadow: 0 4px 16px rgba(147,51,234,0.3);
+    }
+    .msg-bot {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 18px 18px 18px 4px;
+    }
+
+    /* Typing dots */
+    @keyframes dot-bounce {
+      0%,80%,100% { transform: translateY(0); }
+      40% { transform: translateY(-6px); }
+    }
+    .dot { animation: dot-bounce 1.4s infinite; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    /* Pulse ring avatar */
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+    .pulse-ring::before {
+      content:'';
+      position:absolute;
+      inset:-4px;
+      border-radius:50%;
+      border:2px solid rgba(147,51,234,0.5);
+      animation: pulse-ring 2s ease-out infinite;
+    }
+
+    @keyframes fadeSlideUp {
+      from { opacity:0; transform:translateY(12px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .msg-anim { animation: fadeSlideUp 0.3s ease forwards; }
+
+    /* Mood button */
+    .mood-btn {
+      display:flex; flex-direction:column; align-items:center; gap:4px;
+      padding:8px; border-radius:12px;
+      border: 1px solid rgba(147,51,234,0.25);
+      background: rgba(147,51,234,0.07);
+      cursor:pointer; transition: all 0.2s ease;
+      min-width:56px;
+    }
+    .mood-btn:hover { background:rgba(147,51,234,0.2); transform:translateY(-3px); border-color:rgba(147,51,234,0.6); }
+    .mood-btn.selected { background:rgba(147,51,234,0.35); border-color:#9333ea; box-shadow:0 0 12px rgba(147,51,234,0.4); }
+    .mood-btn img { width:40px; height:40px; object-fit:contain; }
+    .mood-btn span { font-size:10px; color:var(--text-secondary); text-align:center; line-height:1.2; }
+
+    /* History item */
+    .history-item {
+      padding:10px 12px; border-radius:10px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(147,51,234,0.15);
+      cursor:pointer; transition:background 0.2s;
+      display:flex; align-items:center; gap:10px;
+    }
+    .history-item:hover { background:rgba(147,51,234,0.15); }
+
+    /* Quick reply chips */
+    .quick-chip {
+      padding: 6px 14px; border-radius: 999px; font-size:13px;
+      border: 1px solid rgba(147,51,234,0.4);
+      background: rgba(147,51,234,0.1);
+      color: var(--text-secondary);
+      cursor: pointer; transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .quick-chip:hover { background:rgba(147,51,234,0.3); color:white; }
+
+    /* Scrollbar */
+    .slim-scroll::-webkit-scrollbar { width:4px; }
+    .slim-scroll::-webkit-scrollbar-track { background:transparent; }
+    .slim-scroll::-webkit-scrollbar-thumb { background:rgba(147,51,234,0.4); border-radius:4px; }
+    .slim-scroll { scrollbar-width:thin; scrollbar-color:rgba(147,51,234,0.4) transparent; }
+
+    /* Mood category filter */
+    .cat-btn {
+      padding:4px 14px; border-radius:999px; font-size:12px; font-weight:500;
+      border: 1px solid rgba(147,51,234,0.3);
+      background:transparent; color:var(--text-secondary);
+      cursor:pointer; transition:all 0.2s; white-space:nowrap;
+    }
+    .cat-btn.active, .cat-btn:hover { background:rgba(147,51,234,0.25); color:white; border-color:rgba(147,51,234,0.7); }
+
+    /* Overlay */
+    #sidebar-overlay { background:rgba(0,0,0,0.6); backdrop-filter:blur(2px); }
+  </style>
+</head>
+
+<body class="bg-primary dark" style="font-family:'Space Grotesk','Noto Sans',sans-serif; overflow-x:hidden;">
+  <div id="side-menu-container"></div>
+  <div id="universal-navbar-container"></div>
+
+  <script type="module">
+    import { supabase } from '../js/supabase.js';
+
+    // ---- Profile & Auth ----
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      const user = session?.user;
+      if (!user && event !== 'INITIAL_SESSION') {
+        window.location.href = 'auth.html';
+        return;
+      }
+      if (user) {
+        currentUserId = user.id;
+        loadNavbarProfile(user);
+        loadChatHistory(user.id);
+        computeStreak();
+      }
+    });
+
+    // Initial check
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) window.location.href = 'auth.html';
+      else {
+        currentUserId = session.user.id;
+        loadNavbarProfile(session.user);
+        loadChatHistory(session.user.id);
+        computeStreak();
+      }
+    })();
+
+    async function loadNavbarProfile(user) {
+      const navbarProfile = document.getElementById('navbar-profile');
+      if (navbarProfile) navbarProfile.style.display = 'flex';
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') throw error;
+        const p = profile || {};
+        const displayName = `${p.first_name || ''} ${p.last_name || ''}`.trim() || user.email.split('@')[0];
+        const photoEl = document.getElementById('navbar-profile-photo');
+        if (photoEl) {
+          if (p.photo_url) { photoEl.style.backgroundImage = `url("${p.photo_url}")`; photoEl.innerHTML = ''; }
+          else { photoEl.style.backgroundImage = 'none'; photoEl.innerHTML = '<span class="material-symbols-outlined" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:20px;color:var(--primary-color)">person</span>'; }
+        }
+        const nameEl = document.getElementById('navbar-name');
+        if (nameEl) nameEl.textContent = displayName || 'User';
+        const roleEl = document.getElementById('navbar-class-role');
+        if (roleEl) roleEl.textContent = p.class_grade || 'Student';
+      } catch (e) { console.error('Navbar profile error:', e); }
+
+      // Profile dropdown toggle
+      const profileDiv = document.getElementById('navbar-profile');
+      const dropdown = document.getElementById('navbar-dropdown');
+      if (profileDiv && dropdown) {
+        profileDiv.onclick = e => { e.stopPropagation(); dropdown.classList.toggle('hidden'); };
+        document.addEventListener('click', () => dropdown.classList.add('hidden'));
+      }
+      // Sign out
+      document.getElementById('navbar-sign-out-btn')?.addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        window.location.href = '../index.html';
+      });
+    }
+
+    // ---- Conversation State ----
+    let conversationHistory = [];
+    let currentMood = null;
+    let currentUserId = null;
+
+    // ---- Save Mood to Supabase ----
+    async function saveMoodEntry(mood) {
+      if (!currentUserId) return;
+      try {
+        const { error } = await supabase
+          .from('moods')
+          .insert({ user_id: currentUserId, mood: mood });
+
+        if (error) throw error;
+
+        // Use centralized rewards system
+        const { updateRewards } = await import('../js/rewards.js');
+        await updateRewards(currentUserId, 2);
+
+        loadChatHistory(currentUserId);
+        computeStreak();
+      } catch (e) { console.error('Save mood error:', e); }
+    }
+
+    // ---- Load Chat History (recent moods) ----
+    async function loadChatHistory(userId) {
+      try {
+        const { data: moods, error } = await supabase
+          .from('moods')
+          .select('*')
+          .eq('user_id', userId)
+          .order('timestamp', { ascending: false })
+          .limit(20);
+
+        if (error) throw error;
+
+        const list = document.getElementById('history-list');
+        if (!list) return;
+        list.innerHTML = '';
+        if (!moods || moods.length === 0) {
+          list.innerHTML = '<p class="text-xs text-center py-4" style="color:#7c6b99;">No mood history yet.<br/>Start a conversation!</p>';
+          return;
+        }
+        moods.forEach(d => {
+          const date = new Date(d.timestamp);
+          const item = document.createElement('div');
+          item.className = 'history-item';
+          item.innerHTML = `
+            <span style="font-size:22px;">${getMoodEmoji(d.mood)}</span>
+            <div style="flex:1;min-width:0;">
+              <p style="font-size:13px;font-weight:600;color:#fff;margin:0;truncate;">${d.mood}</p>
+              <p style="font-size:11px;color:#9c7fc0;margin:0;">${formatDate(date)}</p>
+            </div>`;
+          list.appendChild(item);
+        });
+      } catch (e) { console.error('History load error:', e); }
+    }
+
+    // ---- Streak calculation ----
+    async function computeStreak() {
+      if (!currentUserId) return;
+      try {
+        const { data: moods, error } = await supabase
+          .from('moods')
+          .select('timestamp')
+          .eq('user_id', currentUserId)
+          .order('timestamp', { ascending: false })
+          .limit(60);
+
+        if (error) throw error;
+
+        const dates = new Set(moods.map(d => new Date(d.timestamp).toDateString()).filter(Boolean));
+        let streak = 0, day = new Date();
+        while (dates.has(day.toDateString())) { streak++; day.setDate(day.getDate() - 1); }
+        const streakEl = document.getElementById('streak-display');
+        if (streakEl) streakEl.textContent = `${streak} day${streak !== 1 ? 's' : ''}`;
+      } catch (e) { console.error('Streak calculation error:', e); }
+    }
+
+    // ---- AI Response Logic ----
+    const moodTips = {
+      Happy: ["Share your happiness with others around you.", "Write down three things you're grateful for.", "Use this positive energy to tackle a challenging task."],
+      Sad: ["Allow yourself to feel your emotions without judgment.", "Reach out to a trusted friend or family member.", "Write down your feelings in a journal."],
+      Anxious: ["Practice deep breathing: inhale 4 counts, hold 4, exhale 4.", "Ground yourself: name 5 things you can see, 4 you can touch.", "Break overwhelming tasks into smaller, manageable steps."],
+      Ambitious: ["Set small, achievable goals to build momentum.", "Track your progress daily to see improvement.", "Reward yourself for milestones reached."],
+      Excited: ["Channel your energy into productive activities.", "Use this motivation to start a new project.", "Document your progress and achievements."],
+      Angry: ["Take a moment to pause before reacting.", "Try deep breathing or a short walk.", "Express your feelings constructively in writing."],
+      Stressed: ["Prioritise your tasks — what truly needs doing today?", "Step outside for 5 minutes of fresh air.", "Practice progressive muscle relaxation."],
+      Tired: ["Rest is productive — don't feel guilty.", "Try a short power nap if possible.", "Stay hydrated and eat something nourishing."],
+      Lonely: ["Reach out to someone you trust, even with a small message.", "Join an online community around something you love.", "Consider journaling your thoughts."],
+      Bored: ["Try something new and creative today.", "Revisit a hobby you've been neglecting.", "Challenge yourself with a small, fun goal."],
+    };
+
+    function getMoodTip(mood) {
+      const tips = moodTips[mood] || ["Take a moment to check in with yourself. How can you support your wellbeing today?"];
+      return tips[Math.floor(Math.random() * tips.length)];
+    }
+
+    function getMoodEmoji(mood) {
+      const map = { Happy: '😄', Sad: '😔', Angry: '😠', Anxious: '😟', Excited: '🤩', Ambitious: '💪', Stressed: '😰', Tired: '😴', Lonely: '🥺', Bored: '😑', Calm: '😌', Focused: '🎯', Curious: '🤔', Confident: '😎', Annoyed: '😤', Ashamed: '😳', Concerned: '😦', Confused: '🤷', Disappointed: '😞', Hopeless: '😭', Hurt: '💔', Jealous: '💚', Included: '🤝', Proud: '🏆', Determined: '🔥', Grateful: '🙏' };
+      return map[mood] || '🙂';
+    }
+
+    function formatDate(d) {
+      const now = new Date();
+      const diff = Math.floor((now - d) / 60000);
+      if (diff < 1) return 'Just now';
+      if (diff < 60) return `${diff}m ago`;
+      if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    const localResponses = {
+      0: mood => `I can see you're feeling **${mood}** right now. That's completely valid! 💜\n\n${getMoodTip(mood)}\n\nWould you like to tell me more about what's going on?`,
+      1: () => `Thank you for sharing that with me. I'm here to listen and support you. 🌟\n\nWould you like to try a quick journaling prompt, or would you prefer some coping tips?`,
+      2: mood => `Here's a journaling prompt for you:\n\n*"${mood === 'Happy' ? "Describe a moment today when you felt joy. What made it special?" :
+        mood === 'Sad' ? "What are three small things that brought you comfort recently?" :
+          "What is one thing you can do for yourself today that shows self-compassion?"
+        }"*\n\nFeel free to reflect on it here, or just let me know how you're feeling now!`,
+      default: () => `I'm here for you. Every feeling is valid and temporary. 💜\n\nWould you like to log another mood, explore coping strategies, or just chat?`
+    };
+
+    async function getAIResponse(message, mood, step) {
+      const fn = localResponses[step] || localResponses.default;
+      return fn(mood || 'Calm');
+    }
+
+    // Expose functions to window for global access
+    window.handleUserMessage = handleUserMessage;
+    window.saveMoodEntry = saveMoodEntry;
+
+    // Navigation dropdown
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.nav-dropdown-toggle').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.preventDefault(); e.stopPropagation();
+          const menu = btn.parentElement.querySelector('.nav-dropdown-menu');
+          document.querySelectorAll('.nav-dropdown-menu').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
+          menu?.classList.toggle('hidden');
+        });
+      });
+      document.addEventListener('click', () => document.querySelectorAll('.nav-dropdown-menu').forEach(m => m.classList.add('hidden')));
+    });
+  </script>
+
+  <div id="sidebar-overlay" class="fixed inset-0 z-20 hidden"></div>
+  <main class="flex-1 transition-all duration-300 ml-64">
+    <div class="ai-chat-layout h-screen overflow-hidden">
+
+      <!-- ===== SIDEBAR ===== -->
+      <aside class="chat-sidebar" id="chat-sidebar">
+        <!-- Sidebar Header -->
+        <div class="flex items-center justify-between p-4 border-b" style="border-color:#2A2140;">
+          <h2 class="font-bold text-base flex items-center gap-2 text-white m-0">
+            <span class="material-symbols-outlined" style="color:#9333ea; font-size:20px;">history</span> Chat History
+          </h2>
+          <button id="sidebar-close-btn"
+            class="xl:hidden translucent-button rounded-full flex items-center justify-center"
+            style="width:32px;height:32px;">
+            <span class="material-symbols-outlined text-base">close</span>
+          </button>
+        </div>
+
+        <!-- New Chat -->
+        <div class="p-4 border-b" style="border-color:#2A2140;">
+          <button id="new-chat-btn"
+            class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm text-white transition-all hover:-translate-y-0.5"
+            style="background:linear-gradient(135deg,#9333ea,#7e22ce); box-shadow:0 4px 14px rgba(147,51,234,0.4);">
+            <span class="material-symbols-outlined text-base">add_comment</span>
+            New Conversation
+          </button>
+        </div>
+
+        <!-- Streak -->
+        <div class="mx-4 mt-4 p-3 rounded-xl flex items-center gap-3"
+          style="background:rgba(147,51,234,0.1); border:1px solid rgba(147,51,234,0.25);">
+          <span style="font-size:24px;">🔥</span>
+          <div>
+            <p class="text-xs m-0" style="color:#9c7fc0;">Current Streak</p>
+            <p id="streak-display" class="font-bold text-white m-0 text-base">0 days</p>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="px-4 mt-3">
+          <div class="flex items-center gap-2 rounded-xl px-3 py-2"
+            style="background:rgba(255,255,255,0.04); border:1px solid rgba(147,51,234,0.2);">
+            <span class="material-symbols-outlined text-base" style="color:#7c6b99;">search</span>
+            <input id="history-search" type="text" placeholder="Search history…" autocomplete="off"
+              class="bg-transparent border-none outline-none text-sm text-white w-full placeholder:text-[#7c6b99]" />
+          </div>
+        </div>
+
+        <!-- History List -->
+        <div class="flex-1 overflow-y-auto slim-scroll px-4 py-3 flex flex-col gap-2" id="history-list">
+          <p class="text-xs text-center py-4" style="color:#7c6b99;">Loading history…</p>
+        </div>
+      </aside>
+
+      <!-- ===== MAIN CHAT AREA ===== -->
+      <section class="flex flex-col flex-1 overflow-hidden">
+
+        <!-- Chat top bar -->
+        <div class="flex items-center gap-4 px-4 py-3 border-b"
+          style="background:rgba(26,20,45,0.7); border-color:#2A2140; backdrop-filter:blur(10px);">
+          <button id="mobile-sidebar-btn"
+            class="xl:hidden translucent-button flex items-center justify-center rounded-full"
+            style="width:36px;height:36px;">
+            <span class="material-symbols-outlined text-base">menu_open</span>
+          </button>
+          <!-- AI avatar & status -->
+          <div class="flex items-center gap-3">
+            <div class="relative pulse-ring" style="position:relative;">
+              <div class="rounded-full flex items-center justify-center"
+                style="width:40px;height:40px;background:rgba(147,51,234,0.2);">
+                <img src="../assets/favicon.png" alt="AI" style="width:28px;height:28px;object-fit:contain;"
+                  onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\'material-symbols-outlined\' style=\'color:#9333ea;font-size:22px;\'>smart_toy</span>';" />
+              </div>
+            </div>
+            <div>
+              <p class="font-bold text-white m-0 text-sm">NeuroSync Assistant</p>
+              <p class="text-xs m-0 flex items-center gap-1" style="color:#9c7fc0;">
+                <span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;"></span>
+                Online
+              </p>
+            </div>
+          </div>
+          <div class="ml-auto flex items-center gap-2">
+            <button id="clear-chat-btn"
+              class="translucent-button rounded-full px-3 py-1 text-xs flex items-center gap-1"
+              title="Clear conversation">
+              <span class="material-symbols-outlined" style="font-size:16px;">refresh</span> Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Messages window -->
+        <div id="chat-window" class="flex-1 overflow-y-auto slim-scroll p-4 flex flex-col gap-4">
+          <!-- Welcome message injected by JS -->
+        </div>
+
+        <!-- Quick replies -->
+        <div id="quick-replies" class="flex flex-wrap justify-center gap-2 px-4 pb-2 hidden"></div>
+
+        <!-- ===== INPUT AREA ===== -->
+        <div class="border-t p-4"
+          style="background:rgba(26,20,45,0.9); border-color:#2A2140; backdrop-filter:blur(10px);">
+
+          <!-- Category filter -->
+          <div class="flex items-center gap-2 mb-3">
+            <div class="flex gap-2 overflow-x-auto pb-1" style="scrollbar-width:none;">
+              <button class="cat-btn active" data-cat="all">All</button>
+              <button class="cat-btn" data-cat="positive">Positive</button>
+              <button class="cat-btn" data-cat="negative">Negative</button>
+              <button class="cat-btn" data-cat="neutral">Neutral</button>
+            </div>
+            <button id="toggle-grid-btn"
+              class="ml-auto translucent-button rounded-full flex items-center justify-center shrink-0"
+              style="width:30px;height:30px;" title="Toggle mood grid">
+              <span class="material-symbols-outlined text-base" id="toggle-grid-icon">expand_less</span>
+            </button>
+          </div>
+
+          <!-- Mood grid -->
+          <div id="mood-grid" class="grid gap-2 mb-3 overflow-y-auto slim-scroll"
+            style="max-height:120px; grid-template-columns:repeat(auto-fill,minmax(58px,1fr));">
+
+            <!-- Positive -->
+            <button class="mood-btn" data-mood="Happy" data-cat="positive"><img
+                src="../assets/images/Emotional/Happy.png" alt="Happy" /> <span>Happy</span></button>
+            <button class="mood-btn" data-mood="Excited" data-cat="positive"><img
+                src="../assets/images/Emotional/Excited.png" alt="Excited" /> <span>Excited</span></button>
+            <button class="mood-btn" data-mood="Ambitious" data-cat="positive"><img
+                src="../assets/images/Emotional/Ambitious.png" alt="Ambitious" /> <span>Ambitious</span></button>
+            <button class="mood-btn" data-mood="Confident" data-cat="positive"><img
+                src="../assets/images/Emotional/Confident.png" alt="Confident" /> <span>Confident</span></button>
+            <button class="mood-btn" data-mood="Proud" data-cat="positive"><img
+                src="../assets/images/Emotional/Proud.png" alt="Proud" /> <span>Proud</span></button>
+            <button class="mood-btn" data-mood="Grateful" data-cat="positive"><img
+                src="../assets/images/Emotional/Greatful.png" alt="Grateful" /> <span>Grateful</span></button>
+            <button class="mood-btn" data-mood="Determined" data-cat="positive"><img
+                src="../assets/images/Emotional/Determined.png" alt="Determined" /> <span>Determined</span></button>
+            <button class="mood-btn" data-mood="Included" data-cat="positive"><img
+                src="../assets/images/Emotional/Included.png" alt="Included" /> <span>Included</span></button>
+
+            <!-- Negative -->
+            <button class="mood-btn" data-mood="Sad" data-cat="negative"><img
+                src="../assets/images/Emotional/Hopeless.png" alt="Sad" /> <span>Sad</span></button>
+            <button class="mood-btn" data-mood="Angry" data-cat="negative"><img
+                src="../assets/images/Emotional/Angry.png" alt="Angry" /> <span>Angry</span></button>
+            <button class="mood-btn" data-mood="Anxious" data-cat="negative"><img
+                src="../assets/images/Emotional/Anxious.png" alt="Anxious" /> <span>Anxious</span></button>
+            <button class="mood-btn" data-mood="Stressed" data-cat="negative"><img
+                src="../assets/images/Emotional/Stressed.png" alt="Stressed" /> <span>Stressed</span></button>
+            <button class="mood-btn" data-mood="Annoyed" data-cat="negative"><img
+                src="../assets/images/Emotional/Annoyed.png" alt="Annoyed" /> <span>Annoyed</span></button>
+            <button class="mood-btn" data-mood="Ashamed" data-cat="negative"><img
+                src="../assets/images/Emotional/Ashamed.png" alt="Ashamed" /> <span>Ashamed</span></button>
+            <button class="mood-btn" data-mood="Bored" data-cat="negative"><img
+                src="../assets/images/Emotional/Bored.png" alt="Bored" /> <span>Bored</span></button>
+            <button class="mood-btn" data-mood="Concerned" data-cat="negative"><img
+                src="../assets/images/Emotional/Concerned.png" alt="Concerned" /> <span>Concerned</span></button>
+            <button class="mood-btn" data-mood="Confused" data-cat="negative"><img
+                src="../assets/images/Emotional/Confused.png" alt="Confused" /> <span>Confused</span></button>
+            <button class="mood-btn" data-mood="Disappointed" data-cat="negative"><img
+                src="../assets/images/Emotional/Disappointed.png" alt="Disappointed" /><span>Disappoint.</span></button>
+            <button class="mood-btn" data-mood="Hopeless" data-cat="negative"><img
+                src="../assets/images/Emotional/Hopeless.png" alt="Hopeless" /> <span>Hopeless</span></button>
+            <button class="mood-btn" data-mood="Hurt" data-cat="negative"><img src="../assets/images/Emotional/Hurt.png"
+                alt="Hurt" /> <span>Hurt</span></button>
+            <button class="mood-btn" data-mood="Jealous" data-cat="negative"><img
+                src="../assets/images/Emotional/Jealous.png" alt="Jealous" /> <span>Jealous</span></button>
+            <button class="mood-btn" data-mood="Lonely" data-cat="negative"><img
+                src="../assets/images/Emotional/Lonely.png" alt="Lonely" /> <span>Lonely</span></button>
+            <button class="mood-btn" data-mood="Tired" data-cat="negative"><img
+                src="../assets/images/Emotional/Tired.png" alt="Tired" /> <span>Tired</span></button>
+
+            <!-- Neutral -->
+            <button class="mood-btn" data-mood="Calm" data-cat="neutral"><img src="../assets/images/Emotional/Calm.png"
+                alt="Calm" /> <span>Calm</span></button>
+            <button class="mood-btn" data-mood="Focused" data-cat="neutral"><img
+                src="../assets/images/Emotional/Focused.png" alt="Focused" /> <span>Focused</span></button>
+            <button class="mood-btn" data-mood="Curious" data-cat="neutral"><img
+                src="../assets/images/Emotional/Curious.png" alt="Curious" /> <span>Curious</span></button>
+          </div>
+
+          <!-- Text input -->
+          <form id="chat-form" class="flex items-center gap-2">
+            <input id="chat-input" type="text" autocomplete="off"
+              placeholder="Message NeuroSync AI… or select a mood above"
+              class="flex-1 rounded-xl px-4 py-3 text-sm text-white outline-none"
+              style="background:rgba(255,255,255,0.06); border:1px solid rgba(147,51,234,0.3);" />
+            <button type="submit" id="send-btn"
+              class="flex items-center justify-center rounded-xl shrink-0 transition-all hover:scale-105"
+              style="width:44px;height:44px;background:linear-gradient(135deg,#9333ea,#7e22ce);box-shadow:0 4px 14px rgba(147,51,234,0.4);">
+              <span class="material-symbols-outlined text-white text-xl">send</span>
+            </button>
+          </form>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== CHAT JAVASCRIPT ===== -->
+    <script>
+      let convStep = 0;
+
+      // ---- DOM refs ----
+      const chatWindow = document.getElementById('chat-window');
+      const chatInput = document.getElementById('chat-input');
+      const chatForm = document.getElementById('chat-form');
+      const quickReplies = document.getElementById('quick-replies');
+      const moodGrid = document.getElementById('mood-grid');
+      const toggleGridBtn = document.getElementById('toggle-grid-btn');
+      const toggleIcon = document.getElementById('toggle-grid-icon');
+      const sidebar = document.getElementById('chat-sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+
+      // ---- Sidebar toggle (mobile) ----
+      function openSidebar() { sidebar.classList.add('open'); overlay.classList.remove('hidden'); }
+      function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.add('hidden'); }
+      document.getElementById('mobile-sidebar-btn')?.addEventListener('click', openSidebar);
+      document.getElementById('sidebar-toggle-btn')?.addEventListener('click', openSidebar);
+      document.getElementById('sidebar-close-btn')?.addEventListener('click', closeSidebar);
+      overlay.addEventListener('click', closeSidebar);
+
+      // ---- Mood grid toggle ----
+      let gridVisible = true;
+      toggleGridBtn.addEventListener('click', () => {
+        gridVisible = !gridVisible;
+        moodGrid.style.display = gridVisible ? '' : 'none';
+        toggleIcon.textContent = gridVisible ? 'expand_less' : 'expand_more';
+      });
+
+      // ---- Category filter ----
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const cat = btn.dataset.cat;
+          document.querySelectorAll('.mood-btn').forEach(mb => {
+            mb.style.display = (cat === 'all' || mb.dataset.cat === cat) ? '' : 'none';
+          });
+        });
+      });
+
+      // ---- Render helpers ----
+      function addMessage(text, role) {
+        const wrap = document.createElement('div');
+        wrap.className = `flex gap-3 msg-anim ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+
+        if (role === 'bot') {
+          wrap.innerHTML = `
+          <div class="shrink-0 rounded-full flex items-center justify-center" style="width:32px;height:32px;background:rgba(147,51,234,0.2);">
+            <span class="material-symbols-outlined" style="font-size:18px;color:#9333ea;">smart_toy</span>
+          </div>
+          <div class="msg-bot px-4 py-3 text-sm leading-relaxed" style="max-width:75%;">${formatText(text)}</div>`;
+        } else {
+          wrap.innerHTML = `<div class="msg-user px-4 py-3 text-sm leading-relaxed" style="max-width:75%;">${escHtml(text)}</div>`;
+        }
+
+        chatWindow.appendChild(wrap);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        return wrap;
+      }
+
+      function showTyping() {
+        const wrap = document.createElement('div');
+        wrap.id = 'typing-indicator';
+        wrap.className = 'flex gap-3 msg-anim justify-start';
+        wrap.innerHTML = `
+        <div class="shrink-0 rounded-full flex items-center justify-center" style="width:32px;height:32px;background:rgba(147,51,234,0.2);">
+          <span class="material-symbols-outlined" style="font-size:18px;color:#9333ea;">smart_toy</span>
+        </div>
+        <div class="msg-bot px-4 py-3" style="max-width:75%;">
+          <span class="dot inline-block w-2 h-2 rounded-full mr-1" style="background:#9333ea;"></span>
+          <span class="dot inline-block w-2 h-2 rounded-full mr-1" style="background:#9333ea;"></span>
+          <span class="dot inline-block w-2 h-2 rounded-full" style="background:#9333ea;"></span>
+        </div>`;
+        chatWindow.appendChild(wrap);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      }
+
+      function hideTyping() { document.getElementById('typing-indicator')?.remove(); }
+
+      function showQuickReplies(options) {
+        quickReplies.innerHTML = '';
+        options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'quick-chip';
+          btn.textContent = opt;
+          btn.addEventListener('click', () => handleUserMessage(opt));
+          quickReplies.appendChild(btn);
+        });
+        quickReplies.classList.remove('hidden');
+      }
+      function clearQuickReplies() { quickReplies.classList.add('hidden'); quickReplies.innerHTML = ''; }
+
+      function formatText(t) {
+        return escHtml(t)
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.+?)\*/g, '<em>$1</em>')
+          .replace(/\n/g, '<br/>');
+      }
+      function escHtml(t) {
+        return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      // ---- Handle messages ----
+      async function handleUserMessage(message) {
+        if (!message.trim()) return;
+        clearQuickReplies();
+        addMessage(message, 'user');
+        conversationHistory.push({ role: 'user', content: message, ts: new Date() });
+        chatInput.value = '';
+
+        showTyping();
+        await new Promise(r => setTimeout(r, 900 + Math.random() * 600));
+        hideTyping();
+
+        const reply = await getAIResponse(message, currentMood, convStep);
+        addMessage(reply, 'bot');
+        conversationHistory.push({ role: 'bot', content: reply, ts: new Date() });
+
+        // Advance step and show relevant quick replies
+        convStep++;
+        if (convStep === 1) showQuickReplies(["Tell me more", "What can I do?", "I'm okay"]);
+        else if (convStep === 2) showQuickReplies(["Try journaling", "Give me tips", "Log my mood"]);
+        else showQuickReplies(["New mood check", "View history", "I'm done"]);
+      }
+
+      // ---- Mood button clicks ----
+      document.querySelectorAll('.mood-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          const mood = btn.dataset.mood;
+          currentMood = mood;
+          convStep = 0;
+
+          await saveMoodEntry(mood);
+          const emoji = getMoodEmoji(mood);
+          await handleUserMessage(`I'm feeling ${mood} ${emoji}`);
+        });
+      });
+
+      // ---- Chat form submit ----
+      chatForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        await handleUserMessage(chatInput.value);
+      });
+
+      // ---- New chat / Reset ----
+      function resetChat() {
+        convStep = 0;
+        currentMood = null;
+        conversationHistory = [];
+        chatWindow.innerHTML = '';
+        clearQuickReplies();
+        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+        welcomeMessage();
+      }
+      document.getElementById('new-chat-btn')?.addEventListener('click', resetChat);
+      document.getElementById('clear-chat-btn')?.addEventListener('click', resetChat);
+
+      // ---- Welcome message ----
+      function welcomeMessage() {
+        setTimeout(() => {
+          addMessage("Hey there! 👋 I'm NeuroSync AI, your emotional wellness companion.\n\n**How are you feeling today?**\n\nYou can tap a mood from the grid below, or just describe how you're feeling in words. I'm here to listen! 💜", 'bot');
+          showQuickReplies(["I'm feeling great!", "A bit stressed", "Not sure yet"]);
+        }, 300);
+      }
+
+      // ---- Streak calculation ----
+      async function computeStreak() {
+        if (!currentUserId) return;
+        try {
+          const { data: moods, error } = await supabase
+            .from('moods')
+            .select('timestamp')
+            .eq('user_id', currentUserId)
+            .order('timestamp', { ascending: false })
+            .limit(60);
+
+          if (error) throw error;
+
+          const dates = new Set(moods.map(d => new Date(d.timestamp).toDateString()).filter(Boolean));
+          let streak = 0, day = new Date();
+          while (dates.has(day.toDateString())) { streak++; day.setDate(day.getDate() - 1); }
+          const streakEl = document.getElementById('streak-display');
+          if (streakEl) streakEl.textContent = `${streak} day${streak !== 1 ? 's' : ''}`;
+        } catch (e) { console.error('Streak calculation error:', e); }
+      }
+
+      // ---- History search ----
+      document.getElementById('history-search')?.addEventListener('input', e => {
+        const q = e.target.value.toLowerCase();
+        document.querySelectorAll('#history-list .history-item').forEach(item => {
+          item.style.display = item.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+      });
+
+      // ---- Init ----
+      resetChat();
+    </script>
+    </div>
+  </main>
+</body>
+
+</html>

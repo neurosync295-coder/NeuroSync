@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <title>The Collective // NeuroSync</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700;900&family=Inter:wght@400;700;900&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    :root {
+      --bg-terminal: #0B0B0C;
+      --accent-signal: #EF4444;
+      /* Signal Red */
+      --border-raw: 1px solid rgba(255, 255, 255, 0.1);
+      --text-dim: rgba(255, 255, 255, 0.4);
+    }
+
+    body {
+      background-color: var(--bg-terminal);
+      color: #FFFFFF;
+      font-family: 'Space Grotesk', sans-serif;
+      overflow-x: hidden;
+    }
+
+    .obsidian-card {
+      background: rgba(15, 15, 16, 0.8);
+      border: var(--border-raw);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .obsidian-card:hover {
+      border-color: var(--accent-signal);
+      background: rgba(239, 68, 68, 0.03);
+      transform: translateY(-4px);
+    }
+
+    .glitch-text:hover {
+      animation: glitch 0.3s infinite;
+      color: var(--accent-signal);
+    }
+
+    @keyframes glitch {
+      0% {
+        transform: translate(0);
+      }
+
+      20% {
+        transform: translate(-2px, 2px);
+      }
+
+      40% {
+        transform: translate(-2px, -2px);
+      }
+
+      60% {
+        transform: translate(2px, 2px);
+      }
+
+      80% {
+        transform: translate(2px, -2px);
+      }
+
+      100% {
+        transform: translate(0);
+      }
+    }
+
+    .scanline {
+      width: 100%;
+      height: 1px;
+      background: var(--accent-signal);
+      opacity: 0.1;
+      position: absolute;
+      top: 0;
+      left: 0;
+      animation: scanning 4s linear infinite;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    @keyframes scanning {
+      0% {
+        top: 0%;
+      }
+
+      100% {
+        top: 100%;
+      }
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+
+  <!-- Scripts -->
+  <script src="../js/sidemenu.js"></script>
+  <script src="../js/theme.js"></script>
+  <script src="../js/navbar-component.js"></script>
+</head>
+
+<body class="bg-black text-white selection:bg-red-500 selection:text-black">
+  <div id="side-menu-container"></div>
+  <div id="universal-navbar-container"></div>
+  <div class="scanline"></div>
+
+  <div class="flex">
+    <main class="flex-1 transition-all duration-300 w-full" id="main-content">
+
+      <!-- Hero Section -->
+      <section class="min-h-[70vh] flex flex-col justify-center px-6 lg:px-20 py-24 relative border-b border-white/5">
+        <!-- Side Branding -->
+        <div
+          class="hidden lg:block absolute left-8 top-1/2 -translate-y-1/2 -rotate-90 origin-center whitespace-nowrap overflow-hidden">
+          <span class="text-[10px] font-black tracking-[1.5em] text-white/10 uppercase">Collective_Intelligence //
+            Archive_04</span>
+        </div>
+
+        <div class="max-w-7xl mx-auto w-full">
+          <span class="text-red-500 font-bold tracking-[0.6em] uppercase text-[11px] mb-8 block">[ IDENTITY_VERIFIED
+            ]</span>
+          <h1 class="text-7xl lg:text-[10rem] font-black leading-none tracking-tighter mb-12 uppercase group">
+            The <br> <span class="text-red-600 group-hover:italic transition-all">Collective.</span>
+          </h1>
+          <p class="max-w-2xl text-lg lg:text-xl text-white/50 leading-relaxed font-light">
+            NeuroSync architecture is supported by a decentralized cluster of specialists, aged 15-16, synchronized at
+            KV OEF Kanpur. We engineer modular mental health systems through deep technical synergy.
+          </p>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-12 right-12 flex flex-col items-end gap-4">
+          <span class="text-[9px] font-black tracking-widest text-white/20 uppercase">Initiate_Scan</span>
+          <div class="w-px h-24 bg-gradient-to-b from-red-600 to-transparent"></div>
+        </div>
+      </section>
+
+      <!-- Team Matrix -->
+      <section class="max-w-7xl mx-auto px-6 lg:px-20 py-32">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-px bg-white/5 border border-white/5">
+
+          <!-- Akshat Shukla -->
+          <div class="obsidian-card p-12 group/card">
+            <div class="flex flex-col h-full">
+              <div class="flex justify-between items-start mb-12">
+                <div class="relative shrink-0">
+                  <div
+                    class="absolute inset-0 bg-red-600/20 blur-2xl rounded-full opacity-0 group-hover/card:opacity-100 transition-opacity">
+                  </div>
+                  <img src="../assets/images/Team members/Akshat.png" alt="Akshat Shukla"
+                    class="w-32 h-32 rounded-none border border-white/10 object-cover grayscale contrast-125 group-hover/card:grayscale-0 transition-all duration-500 relative z-10">
+                  <div class="absolute -bottom-2 -right-2 bg-red-600 px-2 py-1 text-[8px] font-black text-black z-20">
+                    CHIEF_ARCHITECT</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-[9px] font-mono text-white/30 tracking-widest mb-1">NODE_ID // 00_AS</div>
+                  <div class="flex justify-end gap-3">
+                    <a href="https://www.instagram.com/aksh.at68_/" target="_blank"
+                      class="text-white/20 hover:text-red-500 transition-colors">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          d="M7.75 2A5.75 5.75 0 002 7.75v8.5A5.75 5.75 0 007.75 22h8.5A5.75 5.75 0 0022 16.25v-8.5A5.75 5.75 0 0016.25 2h-8.5zm8.5 1.5c1.45 0 2.625 1.178 2.625 2.625v8.5c0 1.447-1.176 2.625-2.625 2.625h-8.5a2.626 2.626 0 01-2.625-2.625v-8.5c0-1.447 1.177-2.625 2.625-2.625h8.5zM12 7.25a4.75 4.75 0 100 9.5 4.75 4.75 0 000-9.5zm0 1.5a3.25 3.25 0 110 6.5 3.25 3.25 0 010-6.5zm4-1.812a1.062 1.062 0 11-2.125 0 1.062 1.062 0 012.125 0z" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <h3 class="text-4xl font-black mb-4 glitch-text">Akshat Shukla</h3>
+              <div class="text-red-500 font-bold text-xs tracking-widest uppercase mb-8">Lead Operations & AI Backend
+                Architect</div>
+              <p class="text-sm text-white/40 leading-relaxed font-light mb-auto">
+                Primary director of internal logic and project synchronization. Akshat architected the backend
+                framework, ensuring structural integrity and AI-driven capability. His vision serves as the core
+                processor for the NeuroSync ecosystem, blending technical mastery with decisive leadership.
+              </p>
+              <div class="mt-12 flex items-center justify-between border-t border-white/5 pt-8">
+                <span class="text-[9px] font-black tracking-widest text-white/10 uppercase">Logic_State: Critical</span>
+                <span class="text-[10px] font-mono text-red-500 animate-pulse">ACTIVE_SYNC</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Anupriya -->
+          <div class="obsidian-card p-12 group/card">
+            <div class="flex flex-col h-full">
+              <div class="flex justify-between items-start mb-12">
+                <div class="relative shrink-0">
+                  <div
+                    class="absolute inset-0 bg-red-600/20 blur-2xl rounded-full opacity-0 group-hover/card:opacity-100 transition-opacity">
+                  </div>
+                  <img src="../assets/images/Team members/Anurpiya.png" alt="Anupriya"
+                    class="w-32 h-32 rounded-none border border-white/10 object-cover grayscale contrast-125 group-hover/card:grayscale-0 transition-all duration-500 relative z-10">
+                  <div class="absolute -bottom-2 -right-2 bg-red-600 px-2 py-1 text-[8px] font-black text-black z-20">
+                    VISUAL_ENGINEER</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-[9px] font-mono text-white/30 tracking-widest mb-1">NODE_ID // 01_AP</div>
+                  <div class="flex justify-end gap-3">
+                    <a href="https://www.instagram.com/anu_priya.2010/" target="_blank"
+                      class="text-white/20 hover:text-red-500 transition-colors">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          d="M7.75 2A5.75 5.75 0 002 7.75v8.5A5.75 5.75 0 007.75 22h8.5A5.75 5.75 0 0022 16.25v-8.5A5.75 5.75 0 0016.25 2h-8.5zm8.5 1.5c1.45 0 2.625 1.178 2.625 2.625v8.5c0 1.447-1.176 2.625-2.625 2.625h-8.5a2.626 2.626 0 01-2.625-2.625v-8.5c0-1.447 1.177-2.625 2.625-2.625h8.5zM12 7.25a4.75 4.75 0 100 9.5 4.75 4.75 0 000-9.5zm0 1.5a3.25 3.25 0 110 6.5 3.25 3.25 0 010-6.5zm4-1.812a1.062 1.062 0 11-2.125 0 1.062 1.062 0 012.125 0z" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <h3 class="text-4xl font-black mb-4 glitch-text">Anupriya</h3>
+              <div class="text-red-500 font-bold text-xs tracking-widest uppercase mb-8">Interface Logistics & CSS
+                Specialist</div>
+              <p class="text-sm text-white/40 leading-relaxed font-light mb-auto">
+                Specialist in visual synchronization and interface logistics. Anupriya translates abstract concepts into
+                responsive, high-fidelity layouts. Her technical focus on CSS precision and aesthetic harmonics ensures
+                that the NeuroSync interface remains both clinical and hyper-intuitive for all users.
+              </p>
+              <div class="mt-12 flex items-center justify-between border-t border-white/5 pt-8">
+                <span class="text-[9px] font-black tracking-widest text-white/10 uppercase">Aesthetic_Flux:
+                  Optimized</span>
+                <span class="text-[10px] font-mono text-red-500">SYNC_SECURED</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ashriya Mishra -->
+          <div class="obsidian-card p-12 group/card">
+            <div class="flex flex-col h-full">
+              <div class="flex justify-between items-start mb-12">
+                <div class="relative shrink-0">
+                  <div
+                    class="absolute inset-0 bg-red-600/20 blur-2xl rounded-full opacity-0 group-hover/card:opacity-100 transition-opacity">
+                  </div>
+                  <img src="../assets/images/Team members/Ashriya.png" alt="Ashriya Mishra"
+                    class="w-32 h-32 rounded-none border border-white/10 object-cover grayscale contrast-125 group-hover/card:grayscale-0 transition-all duration-500 relative z-10">
+                  <div class="absolute -bottom-2 -right-2 bg-red-600 px-2 py-1 text-[8px] font-black text-black z-20">
+                    ASSET_DESIGNER</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-[9px] font-mono text-white/30 tracking-widest mb-1">NODE_ID // 02_AM</div>
+                  <div class="flex justify-end gap-3">
+                    <a href="https://www.instagram.com/_aaru.57_/" target="_blank"
+                      class="text-white/20 hover:text-red-500 transition-colors">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          d="M7.75 2A5.75 5.75 0 002 7.75v8.5A5.75 5.75 0 007.75 22h8.5A5.75 5.75 0 0022 16.25v-8.5A5.75 5.75 0 0016.25 2h-8.5zm8.5 1.5c1.45 0 2.625 1.178 2.625 2.625v8.5c0 1.447-1.176 2.625-2.625 2.625h-8.5a2.626 2.626 0 01-2.625-2.625v-8.5c0-1.447 1.177-2.625 2.625-2.625h8.5zM12 7.25a4.75 4.75 0 100 9.5 4.75 4.75 0 000-9.5zm0 1.5a3.25 3.25 0 110 6.5 3.25 3.25 0 010-6.5zm4-1.812a1.062 1.062 0 11-2.125 0 1.062 1.062 0 012.125 0z" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <h3 class="text-4xl font-black mb-4 glitch-text">Ashriya Mishra</h3>
+              <div class="text-red-500 font-bold text-xs tracking-widest uppercase mb-8">Lead Illustrator & Visual
+                Optimization</div>
+              <p class="text-sm text-white/40 leading-relaxed font-light mb-auto">
+                Lead architect for visual assets and illustrative subsystems. Ashriya maintains the detail-oriented
+                integrity of the platform’s visual identity. Her expertise in balancing stunning aesthetics with
+                performance-optimized styles provides the vibrant life and essential clarity required for complex data
+                visualization.
+              </p>
+              <div class="mt-12 flex items-center justify-between border-t border-white/5 pt-8">
+                <span class="text-[9px] font-black tracking-widest text-white/10 uppercase">Asset_Density: High</span>
+                <span class="text-[10px] font-mono text-red-500">LIVE_RENDER</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ankush Choudhary -->
+          <div class="obsidian-card p-12 group/card">
+            <div class="flex flex-col h-full">
+              <div class="flex justify-between items-start mb-12">
+                <div class="relative shrink-0">
+                  <div
+                    class="absolute inset-0 bg-red-600/20 blur-2xl rounded-full opacity-0 group-hover/card:opacity-100 transition-opacity">
+                  </div>
+                  <img src="../assets/images/Team members/Ankush.png" alt="Ankush Choudhary"
+                    class="w-32 h-32 rounded-none border border-white/10 object-cover grayscale contrast-125 group-hover/card:grayscale-0 transition-all duration-500 relative z-10">
+                  <div class="absolute -bottom-2 -right-2 bg-red-600 px-2 py-1 text-[8px] font-black text-black z-20">
+                    INFRA_SPECIALIST</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-[9px] font-mono text-white/30 tracking-widest mb-1">NODE_ID // 03_AC</div>
+                  <div class="flex justify-end gap-3">
+                    <a href="https://www.instagram.com/_ank.sh__/" target="_blank"
+                      class="text-white/20 hover:text-red-500 transition-colors">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                          d="M7.75 2A5.75 5.75 0 002 7.75v8.5A5.75 5.75 0 007.75 22h8.5A5.75 5.75 0 0022 16.25v-8.5A5.75 5.75 0 0016.25 2h-8.5zm8.5 1.5c1.45 0 2.625 1.178 2.625 2.625v8.5c0 1.447-1.176 2.625-2.625 2.625h-8.5a2.626 2.626 0 01-2.625-2.625v-8.5c0-1.447 1.177-2.625 2.625-2.625h8.5zM12 7.25a4.75 4.75 0 100 9.5 4.75 4.75 0 000-9.5zm0 1.5a3.25 3.25 0 110 6.5 3.25 3.25 0 010-6.5zm4-1.812a1.062 1.062 0 11-2.125 0 1.062 1.062 0 012.125 0z" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <h3 class="text-4xl font-black mb-4 glitch-text">Ankush Choudhary</h3>
+              <div class="text-red-500 font-bold text-xs tracking-widest uppercase mb-8">Infrastructure & Backend Logic
+                Optimizer</div>
+              <p class="text-sm text-white/40 leading-relaxed font-light mb-auto">
+                Specialist in core infrastructure and backend logic optimization. Ankush manages the complex bridge
+                between hardware efficiency and technical problem-solving. His dedication to continual technical
+                evolution ensures that NeuroSync’s data processing remains stable, resilient, and optimized for
+                high-capacity synchronization.
+              </p>
+              <div class="mt-12 flex items-center justify-between border-t border-white/5 pt-8">
+                <span class="text-[9px] font-black tracking-widest text-white/10 uppercase">Buffer_State: Clear</span>
+                <span class="text-[10px] font-mono text-red-500">PROCC_SECURE</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Vision Statement -->
+      <section class="border-t border-white/5 py-40 px-6 lg:px-20 bg-[#080809]">
+        <div class="max-w-4xl mx-auto text-center">
+          <span class="text-[10px] font-black tracking-[1em] text-red-600 uppercase mb-12 block">Mission_Protocol</span>
+          <h2 class="text-4xl lg:text-7xl font-black mb-12 uppercase leading-tight">Augmenting Mental Resilience Through
+            <span class="italic text-white/20">Synced Intelligence.</span>
+          </h2>
+          <p class="text-white/40 text-lg leading-relaxed">
+            NeuroSync is engineered to counteract cognitive overload and stabilize mental well-being in high-pressure
+            academic environments. We believe in technological augmentation as a tool for human stabilization.
+          </p>
+        </div>
+      </section>
+
+      <!-- Brutalist Footer -->
+      <footer class="border-t border-white/10 py-20 px-6 lg:px-20 bg-black">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start gap-12">
+          <div class="text-4xl font-black italic text-white/10">
+            NeuroSync. <br> <span class="not-italic">Collective.</span>
+          </div>
+          <div class="text-[9px] font-mono text-white/30 leading-loose uppercase tracking-widest">
+            System_Pulse: <span id="sys-pulse" class="text-red-600">STABLE</span> <br>
+            Temporal_ID: <span id="sys-time">2026.03.06 // 14:15:32</span> <br>
+            Security_Layer: [NEURAL_ENCRYPTED]
+          </div>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // Update Sys Time & Pulse
+    setInterval(() => {
+      const now = new Date();
+      const format = now.getFullYear() + '.' +
+        String(now.getMonth() + 1).padStart(2, '0') + '.' +
+        String(now.getDate()).padStart(2, '0') + ' // ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0') + ':' +
+        String(now.getSeconds()).padStart(2, '0');
+      const el = document.getElementById('sys-time');
+      if (el) el.innerText = format;
+
+      const pulse = document.getElementById('sys-pulse');
+      if (pulse) pulse.classList.toggle('opacity-50');
+    }, 1000);
+  </script>
+</body>
+
+</html>

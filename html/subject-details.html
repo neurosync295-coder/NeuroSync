@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <title>Archive Explorer // Swiss Brutalism</title>
+
+    <!-- Custom Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;700;900&family=Space+Grotesk:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <!-- Custom CSS Base -->
+    <link rel="stylesheet" href="../css/global.css">
+    <style>
+        :root {
+            --bg-obsidian: #000000;
+            --text-primary: #FFFFFF;
+            --accent-signal: #EF4444;
+        }
+
+        body {
+            background-color: var(--bg-obsidian);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .serif-display {
+            font-family: 'Instrument Serif', serif;
+        }
+
+        .font-mono {
+            font-family: 'Space Grotesk', monospace;
+        }
+
+        .asymmetric-tension {
+            margin-left: 8%;
+        }
+
+        @media (max-width: 1024px) {
+            .asymmetric-tension {
+                margin-left: 0;
+            }
+        }
+
+        /* Brutalist Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-signal);
+        }
+
+        .flicker-text:hover {
+            animation: flicker 0.2s infinite;
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .custom-shadow {
+            box-shadow: 10px 10px 0px 0px var(--accent-signal);
+        }
+    </style>
+
+    <!-- Scripts -->
+    <script src="../js/sidemenu.js"></script>
+    <script src="../js/theme.js"></script>
+    <script src="../js/navbar-component.js"></script>
+    <script type="module">
+        import { supabase } from '../js/supabase.js';
+
+        // Check authentication
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (!session && event !== 'INITIAL_SESSION') {
+                window.location.href = 'auth.html';
+            } else if (session) {
+                // Initialize subject details
+                import('../js/subject-details.js').then(module => {
+                    module.initSubjectDetails();
+                });
+            }
+        });
+
+        // Initial check
+        (async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) window.location.href = 'auth.html';
+        })();
+    </script>
+</head>
+
+<body class="bg-black text-white selection:bg-red-500 selection:text-black">
+    <div id="side-menu-container"></div>
+    <div id="universal-navbar-container"></div>
+
+    <div class="flex">
+        <main class="flex-1 transition-all duration-300 w-full" id="main-content">
+
+            <!-- Subject Header -->
+            <div class="w-full border-b border-white/10 pt-32 pb-24 px-6 lg:px-12 relative bg-black">
+                <!-- Navigation Control -->
+                <div class="absolute top-0 left-0 p-12 z-20">
+                    <button onclick="window.location.href='study-library.html'"
+                        class="group flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.4em] text-white hover:text-red-500 transition-colors">
+                        <span
+                            class="material-symbols-outlined text-sm transition-transform group-hover:-translate-x-2">arrow_back</span>
+                        RETURN_TO_VAULT
+                    </button>
+                </div>
+
+                <!-- Architectural Branding -->
+                <div
+                    class="absolute top-0 right-0 p-12 text-[9px] font-black uppercase tracking-[0.6em] text-white/20 hidden lg:block">
+                    DATA_VECTOR // <span id="vector-id">0x7B2</span>
+                </div>
+
+                <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-end justify-between gap-16">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-4 mb-8">
+                            <span class="h-px w-12 bg-red-600"></span>
+                            <span class="text-red-500 font-black tracking-[0.5em] uppercase text-[10px]"
+                                id="subject-category">ARCHIVE_EXPLORER</span>
+                        </div>
+                        <h1 id="subject-title"
+                            class="text-[clamp(4.5rem,14vw,11rem)] serif-display leading-[0.82] italic font-normal tracking-tighter">
+                            Subject <br> <span class="not-italic text-white">Explorer.</span>
+                        </h1>
+                    </div>
+
+                    <!-- Archive Diagnostics -->
+                    <div
+                        class="w-full lg:w-64 text-left lg:text-right flex flex-row lg:flex-col justify-between gap-6 border-l lg:border-l-0 lg:border-r border-white/10 lg:pr-8 pl-8 lg:pl-0">
+                        <div>
+                            <div class="text-[9px] font-black uppercase tracking-widest text-white/30 mb-2">
+                                Node_Frequency</div>
+                            <div class="text-xs font-bold text-red-500 font-mono uppercase" id="file-count">0
+                                NODES_SYNCED</div>
+                        </div>
+                        <div>
+                            <div class="text-[9px] font-black uppercase tracking-widest text-white/30 mb-2">Access_Level
+                            </div>
+                            <div class="text-xs font-bold font-mono text-white/80 tracking-tighter uppercase">
+                                AUTHORIZED_USER</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full max-w-7xl mx-auto py-24 px-6 lg:px-12 asymmetric-tension">
+
+                <!-- Query Matrix Section -->
+                <div class="mb-32 relative">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+                        <div class="lg:col-span-8 group">
+                            <label for="modal-search"
+                                class="block text-[9px] tracking-[0.8em] font-black uppercase text-red-500 mb-8 italic">Filter_Archive_Nodes</label>
+                            <div class="relative">
+                                <input type="text" id="modal-search" placeholder="QUERY_MODULES..."
+                                    class="w-full bg-transparent border-b-4 border-white text-4xl lg:text-6xl font-black text-white placeholder:text-white/5 focus:border-red-600 outline-none transition-all rounded-none serif-display p-0 pb-6 uppercase">
+                                <span
+                                    class="material-symbols-outlined absolute right-0 top-1/2 -translate-y-full text-white/10 text-4xl group-focus-within:text-red-600 transition-colors">database</span>
+                            </div>
+                        </div>
+
+                        <!-- Topology Control -->
+                        <div class="lg:col-span-4 flex flex-col gap-12 lg:items-end">
+                            <div class="text-[9px] tracking-[0.5em] font-black uppercase text-white/20">Topology_Control
+                            </div>
+                            <div class="flex gap-4">
+                                <button id="view-toggle-grid"
+                                    class="p-4 border-2 border-white text-white hover:bg-white hover:text-black transition-all bg-white text-black"
+                                    title="Grid Topology">
+                                    <span class="material-symbols-outlined">grid_view</span>
+                                </button>
+                                <button id="view-toggle-list"
+                                    class="p-4 border-2 border-white text-white hover:bg-white hover:text-black transition-all"
+                                    title="List Topology">
+                                    <span class="material-symbols-outlined">list</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Archive Stream -->
+                <div id="files-container" class="space-y-40">
+                    <!-- Dynamic Archive Fragments -->
+                </div>
+            </div>
+
+            <!-- Brutalist Footer -->
+            <footer class="mt-40 border-t border-white/10 py-20 px-6 lg:px-12 bg-black">
+                <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start gap-12">
+                    <div class="serif-display text-4xl italic text-white/20">
+                        NeuroSync. <br> <span class="not-italic">Explorer.</span>
+                    </div>
+                    <div class="text-[9px] font-mono text-white/40 leading-loose uppercase tracking-widest">
+                        System_Time: <span id="sys-time">2026.03.06 // 14:15:32</span> <br>
+                        Explorer_ID: [ANONYMOUS_SYNC] <br>
+                        Data_Integrity: [VALIDATED]
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // Update Sys Time
+        setInterval(() => {
+            const now = new Date();
+            const format = now.getFullYear() + '.' +
+                String(now.getMonth() + 1).padStart(2, '0') + '.' +
+                String(now.getDate()).padStart(2, '0') + ' // ' +
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0') + ':' +
+                String(now.getSeconds()).padStart(2, '0');
+            const el = document.getElementById('sys-time');
+            if (el) el.innerText = format;
+        }, 1000);
+    </script>
+</body>
+
+</html>
