@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.supabase.co https://res.cloudinary.com https://*.googleusercontent.com; connect-src 'self' https://*.supabase.co https://www.soundjay.com; media-src 'self' https://www.soundjay.com;">
   <title>NeuroSync - Mood Tracker</title>
   <meta name="description" content="Track and understand your emotions with NeuroSync's AI-powered mood tracker." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,9 +18,9 @@
     rel="stylesheet" />
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <script src="../js/sidemenu.js"></script>
-  <script src="../js/theme.js"></script>
-  <script src="../js/navbar-component.js"></script>
+  <script src="/js/sidemenu.js"></script>
+  <script src="/js/theme.js"></script>
+  <script src="/js/navbar-component.js"></script>
   <!-- Supabase Integration -->
   <style type="text/tailwindcss">
     /* Specific Chat Styles */    /* Sidebar */
@@ -157,7 +159,7 @@
   <div id="universal-navbar-container"></div>
 
   <script type="module">
-    import { supabase } from '../js/supabase.js';
+    import { supabase } from '/js/supabase.js';
 
     // ---- Profile & Auth ----
     supabase.auth.onAuthStateChange(async (event, session) => {
@@ -177,7 +179,7 @@
     // Initial check
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) window.location.href = 'auth.html';
+      if (!session) window.location.href = '/html/auth.html';
       else {
         currentUserId = session.user.id;
         loadNavbarProfile(session.user);
@@ -220,7 +222,7 @@
       // Sign out
       document.getElementById('navbar-sign-out-btn')?.addEventListener('click', async () => {
         await supabase.auth.signOut();
-        window.location.href = '../index.html';
+        window.location.href = '/index.html';
       });
     }
 
@@ -240,7 +242,7 @@
         if (error) throw error;
 
         // Use centralized rewards system
-        const { updateRewards } = await import('../js/rewards.js');
+        const { updateRewards } = await import('/js/rewards.js');
         await updateRewards(currentUserId, 2);
 
         loadChatHistory(currentUserId);

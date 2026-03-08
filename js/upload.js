@@ -151,7 +151,13 @@ export function initUploadPage() {
             console.error(err);
             alert(err.message);
             submitBtn.disabled = false;
-            submitBtn.querySelector('span').innerHTML = '<span class="material-symbols-outlined">publish</span> Execute Upload';
+            const btnSpan = submitBtn.querySelector('span');
+            btnSpan.innerHTML = '';
+            const icon = document.createElement('span');
+            icon.className = 'material-symbols-outlined';
+            icon.textContent = 'publish';
+            btnSpan.appendChild(icon);
+            btnSpan.appendChild(document.createTextNode(' Execute Upload'));
             if (progressContainer) progressContainer.classList.add('hidden');
         }
     });
@@ -166,10 +172,15 @@ export function initUploadPage() {
         fileSelectedUi.classList.add('hidden');
         dropzoneUi.classList.remove('hidden');
 
-        // Reset button loading state
         submitBtn.disabled = false;
         submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        submitBtn.querySelector('span').innerHTML = '<span class="material-symbols-outlined">publish</span> Execute Upload';
+        const btnSpan = submitBtn.querySelector('span');
+        btnSpan.innerHTML = '';
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined';
+        icon.textContent = 'publish';
+        btnSpan.appendChild(icon);
+        btnSpan.appendChild(document.createTextNode(' Execute Upload'));
         if (progressContainer) progressContainer.classList.add('hidden');
 
         // Swap UI

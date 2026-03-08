@@ -158,13 +158,28 @@ document.addEventListener('DOMContentLoaded', function () {
             const date = new Date(comment.created_at).toLocaleDateString();
             const commentEl = document.createElement('div');
             commentEl.className = 'bg-[#161618] border border-[var(--border-raw)] p-6 reveal-on-scroll';
-            commentEl.innerHTML = `
-              <div class="flex justify-between items-start mb-4">
-                <span class="text-[var(--accent-signal)] font-bold tracking-widest text-[10px] uppercase">Log Entry: ${comment.user_name}</span>
-                <span class="text-secondary text-[10px] font-mono">${date}</span>
-              </div>
-              <p class="text-primary text-sm leading-relaxed">${comment.content}</p>
-            `;
+
+            const headerEl = document.createElement('div');
+            headerEl.className = 'flex justify-between items-start mb-4';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'text-[var(--accent-signal)] font-bold tracking-widest text-[10px] uppercase';
+            nameSpan.textContent = `Log Entry: ${comment.user_name}`;
+
+            const dateSpan = document.createElement('span');
+            dateSpan.className = 'text-secondary text-[10px] font-mono';
+            dateSpan.textContent = date;
+
+            headerEl.appendChild(nameSpan);
+            headerEl.appendChild(dateSpan);
+
+            const contentP = document.createElement('p');
+            contentP.className = 'text-primary text-sm leading-relaxed';
+            contentP.textContent = comment.content;
+
+            commentEl.appendChild(headerEl);
+            commentEl.appendChild(contentP);
+
             commentsDisplay.appendChild(commentEl);
           });
         }

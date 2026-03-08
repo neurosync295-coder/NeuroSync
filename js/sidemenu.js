@@ -15,10 +15,8 @@ window.initSideMenuInteractivity = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Determine path prefix based on location
-    const isInHtmlDir = window.location.pathname.includes('/html/');
-    const pfx = isInHtmlDir ? '../' : './';
-    const htmlPfx = isInHtmlDir ? '' : 'html/';
+    // 1. Root-relative paths for subdomain stability
+    const htmlPfx = '/html/';
 
     // 2. Define the Side Menu HTML
     const sideMenuHTML = `
@@ -29,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="material-symbols-outlined text-sm">close</span>
                 </button>
                 <!-- User Profile Box -->
-                <div id="side-profile-box" onclick="window.location.href='${htmlPfx}profile.html'"
+                <div id="side-profile-box" onclick="window.location.href='/html/profile.html'"
                     class="flex items-center gap-3 mb-8 p-4 bg-[#161618] border border-[#27272A] cursor-pointer transition-all hover:bg-[#1C1C1E] hover:border-[var(--accent-signal,#F97316)]/30">
                     <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-none size-12 border border-[#27272A]"
                         id="side-profile-photo">
@@ -227,7 +225,7 @@ function setupSupabaseProfileUpdate() {
     });
 
     // Fallback import if Navbar is missing
-    const importPath = SIDEMENU_SCRIPT_BASE ? `${SIDEMENU_SCRIPT_BASE}supabase.js` : './supabase.js';
+    const importPath = '/js/supabase.js';
     import(importPath).then(({ supabase }) => {
         // Only run if navbar hasn't handled it after 1.5s
         setTimeout(() => {
@@ -270,7 +268,11 @@ async function updateSidebarFromSupabase(supabase, user) {
                 sidePhoto.innerHTML = '';
             } else {
                 sidePhoto.style.backgroundImage = 'none';
-                sidePhoto.innerHTML = '<span class="material-symbols-outlined text-xl text-[var(--primary-color)] flex items-center justify-center w-full h-full">person</span>';
+                sidePhoto.innerHTML = '';
+                const icon = document.createElement('span');
+                icon.className = 'material-symbols-outlined text-xl text-[var(--primary-color)] flex items-center justify-center w-full h-full';
+                icon.textContent = 'person';
+                sidePhoto.appendChild(icon);
             }
         }
 
@@ -281,7 +283,17 @@ async function updateSidebarFromSupabase(supabase, user) {
                 const teacherLink = document.createElement('a');
                 teacherLink.href = 'teacher-dashboard.html';
                 teacherLink.className = 'nav-item';
-                teacherLink.innerHTML = '<span class="material-symbols-outlined text-accent">school</span><span>Teacher Dashboard</span>';
+
+                const icon = document.createElement('span');
+                icon.className = 'material-symbols-outlined text-accent';
+                icon.textContent = 'school';
+
+                const text = document.createElement('span');
+                text.textContent = 'Teacher Dashboard';
+
+                teacherLink.appendChild(icon);
+                teacherLink.appendChild(text);
+
                 nav.insertBefore(teacherLink, nav.children[1]);
                 highlightActiveLink();
             }
@@ -289,7 +301,17 @@ async function updateSidebarFromSupabase(supabase, user) {
                 const adminLink = document.createElement('a');
                 adminLink.href = 'feedback-admin.html';
                 adminLink.className = 'nav-item';
-                adminLink.innerHTML = '<span class="material-symbols-outlined text-accent">admin_panel_settings</span><span>Admin Panel</span>';
+
+                const icon = document.createElement('span');
+                icon.className = 'material-symbols-outlined text-accent';
+                icon.textContent = 'admin_panel_settings';
+
+                const text = document.createElement('span');
+                text.textContent = 'Admin Panel';
+
+                adminLink.appendChild(icon);
+                adminLink.appendChild(text);
+
                 nav.appendChild(adminLink);
                 highlightActiveLink();
             }

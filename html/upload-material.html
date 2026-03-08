@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.supabase.co https://res.cloudinary.com https://*.googleusercontent.com; connect-src 'self' https://*.supabase.co https://www.soundjay.com; media-src 'self' https://www.soundjay.com;">
     <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect" />
     <link as="style"
         href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Space+Grotesk%3Awght%40400%3B500%3B700%3B900&amp;family=Story+Script%3Awght%40400"
@@ -12,19 +14,19 @@
     <title>Upload Material - NeuroSync</title>
     <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script src="../js/theme.js"></script>
-    <script src="../js/sidemenu.js"></script>
-    <script src="../js/navbar-component.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/sidemenu.js"></script>
+    <script src="/js/navbar-component.js"></script>
     <script type="module">
-        import { supabase } from '../js/supabase.js';
+        import { supabase } from '/js/supabase.js';
 
         // Check authentication
         supabase.auth.onAuthStateChange((event, session) => {
             if (!session && event !== 'INITIAL_SESSION') {
-                window.location.href = 'auth.html';
+                window.location.href = '/html/auth.html';
             } else if (session) {
                 // Initialize upload handlers
-                import('../js/upload.js').then(module => {
+                import('/js/upload.js').then(module => {
                     module.initUploadPage();
                 });
             }
@@ -33,11 +35,11 @@
         // Initial check
         (async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) window.location.href = 'auth.html';
+            if (!session) window.location.href = '/html/auth.html';
         })();
     </script>
-    <link rel="stylesheet" href="../css/global.css" />
-    <link rel="stylesheet" href="../css/mobile-optimizations.css" />
+    <link rel="stylesheet" href="/css/global.css" />
+    <link rel="stylesheet" href="/css/mobile-optimizations.css" />
 </head>
 
 <body class="bg-primary dark selection:bg-accent selection:text-white">

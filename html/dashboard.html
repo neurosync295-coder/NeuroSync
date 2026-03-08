@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.supabase.co https://res.cloudinary.com https://*.googleusercontent.com; connect-src 'self' https://*.supabase.co https://www.soundjay.com; media-src 'self' https://www.soundjay.com;">
     <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect" />
     <link as="style"
         href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Space+Grotesk%3Awght%40400%3B500%3B700&amp;family=Story+Script%3Awght%40400"
@@ -13,15 +15,15 @@
     <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <!-- Supabase Integration -->
-    <link rel="stylesheet" href="../css/global.css">
-    <link rel="stylesheet" href="../css/mobile-optimizations.css">
-    <script src="../js/sidemenu.js"></script>
-    <script src="../js/theme.js"></script>
-    <script src="../js/navbar-component.js"></script>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/mobile-optimizations.css">
+    <script src="/js/sidemenu.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/navbar-component.js"></script>
     <script type="module">
-        import { supabase } from '../js/supabase.js';
-        import { initFocusTimer } from '../js/focus.js';
-        import { getThresholdForLevel } from '../js/rewards.js';
+        import { supabase } from '/js/supabase.js';
+        import { initFocusTimer } from '/js/focus.js';
+        import { getThresholdForLevel } from '/js/rewards.js';
 
         let userProfile = null;
 
@@ -48,7 +50,7 @@
             } else {
                 // Initial check
                 const { data: { session: currentSession } } = await supabase.auth.getSession();
-                if (!currentSession) window.location.href = 'auth.html';
+                if (!currentSession) window.location.href = '/html/auth.html';
             }
         });
 
@@ -174,16 +176,8 @@
             }
         }
 
-        // Load mood statistics from Firestore (Wait, user said migrate ALL to Supabase? 
-        // "keep the login system with firebase and rest backend system will be on supabase" 
-        // -> Actually he now said "Shift Login system from firebase to supabase".
-        // This implies EVERYTHING should be on Supabase now.)
-
-        // However, I haven't migrated Moods and FocusSessions yet. 
-        // Let's keep them on Firestore for now to avoid breaking the dashboard, 
-        // OR I should migrate those too if "rest backend system will be on supabase" applies.
-
-        // I'll keep the ones I haven't migrated yet on Firestore but wrapped in try-catch.
+        // Load mood and focus stats from Supabase
+        // Migrated from legacy Firebase architecture
 
         async function loadFocusStats(userId) {
             try {

@@ -16,7 +16,16 @@ export async function initSubjectDetails() {
 
   const titleEl = document.getElementById('subject-title');
   if (titleEl) {
-    titleEl.innerHTML = `${subject} <br> <span class="not-italic text-white">Archives.</span>`;
+    titleEl.innerHTML = '';
+    const subjectText = document.createTextNode(subject + ' ');
+    const br = document.createElement('br');
+    const archivesSpan = document.createElement('span');
+    archivesSpan.className = 'not-italic text-white';
+    archivesSpan.textContent = ' Archives.';
+
+    titleEl.appendChild(subjectText);
+    titleEl.appendChild(br);
+    titleEl.appendChild(archivesSpan);
   }
 
   // Update vector ID for flavor
@@ -69,12 +78,20 @@ function displaySubjectFiles(subject, userClass, user) {
 
   const classData = materialsStructure[userClass];
   if (!classData || !classData[subject]) {
-    container.innerHTML = `
-      <div class="col-span-full border-4 border-white p-20 text-left bg-black">
-        <h3 class="text-6xl serif-display italic text-white mb-6">Archive_Empty.</h3>
-        <p class="text-[10px] text-red-500 font-black uppercase tracking-[0.4em]">ERR_0x404 // SUBJECT_DATA_NOT_FOUND</p>
-      </div>
-    `;
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'col-span-full border-4 border-white p-20 text-left bg-black';
+
+    const h3 = document.createElement('h3');
+    h3.className = 'text-6xl serif-display italic text-white mb-6';
+    h3.textContent = 'Archive_Empty.';
+
+    const p = document.createElement('p');
+    p.className = 'text-[10px] text-red-500 font-black uppercase tracking-[0.4em]';
+    p.textContent = 'ERR_0x404 // SUBJECT_DATA_NOT_FOUND';
+
+    errorDiv.appendChild(h3);
+    errorDiv.appendChild(p);
+    container.appendChild(errorDiv);
     return;
   }
 
@@ -84,17 +101,17 @@ function displaySubjectFiles(subject, userClass, user) {
   let sectionsHTML = '';
 
   // Count total files and build sections
+  container.innerHTML = '';
   subKeys.forEach((sub, subIdx) => {
     const subData = subjectData[sub];
     let subFileCount = 0;
-    let filesHTML = '';
+    const sectionFiles = [];
 
     if (Array.isArray(subData)) {
       subFileCount = subData.length;
       totalFiles += subFileCount;
-
       subData.forEach((file, fileIdx) => {
-        filesHTML += generateFileCard(file, userClass, subject, sub, null, fileIdx, user);
+        sectionFiles.push({ type: 'file', content: generateFileCard(file, userClass, subject, sub, null, fileIdx, user) });
       });
     } else {
       // Nested folders
@@ -103,56 +120,66 @@ function displaySubjectFiles(subject, userClass, user) {
         if (Array.isArray(subSubData)) {
           subFileCount += subSubData.length;
           totalFiles += subSubData.length;
-
-          filesHTML += `
-            <div class="col-span-full pt-12 mt-12 border-t border-white/5 flex items-center justify-between">
-              <span class="text-[10px] font-black tracking-[0.4em] text-white/20 uppercase font-mono italic">Sub_Vector // ${subSub}</span>
-              <span class="h-px flex-1 mx-8 bg-white/5"></span>
-              <span class="text-[9px] font-black text-red-500 font-mono tracking-widest">${subSubData.length} FILES</span>
-            </div>
-          `;
-
+          sectionFiles.push({ type: 'header', text: `Sub_Vector // ${subSub}`, count: subSubData.length });
           subSubData.forEach((file, fileIdx) => {
-            filesHTML += generateFileCard(file, userClass, subject, sub, subSub, fileIdx, user);
+            sectionFiles.push({ type: 'file', content: generateFileCard(file, userClass, subject, sub, subSub, fileIdx, user) });
           });
         }
       });
     }
 
-    sectionsHTML += `
-      <div class="folder-section group/folder" data-folder="${sub}">
-        <!-- Section Header (Toggle) -->
-        <button onclick="window.toggleFolder(this)" 
-                class="w-full flex flex-col lg:flex-row items-end justify-between mb-12 gap-12 text-left hover:bg-white/5 p-4 -m-4 transition-all duration-300">
-            <div class="flex-1">
-                <div class="flex items-center gap-4 mb-6">
-                    <span class="text-[9px] font-black font-mono text-white/20 tracking-[0.4em]">FRAGMENT_0${subIdx + 1}</span>
-                    <span class="h-px w-12 bg-white/10"></span>
-                    <span class="text-red-500 font-black tracking-[0.5em] uppercase text-[9px] italic">CHAPTER_ARCHIVE</span>
-                </div>
-                <div class="flex items-center gap-6">
-                    <span class="text-4xl serif-display text-red-600 transition-transform duration-300 group-[.is-open]/folder:rotate-45">+</span>
-                    <h4 class="text-5xl lg:text-6xl serif-display leading-none text-white italic">${sub}</h4>
-                </div>
-            </div>
-            <div class="text-right border-r border-white/10 pr-8">
-                <div class="text-[9px] font-black uppercase tracking-widest text-white/30 mb-2">Logs_Count</div>
-                <div class="text-xs font-bold font-mono text-white tracking-widest uppercase">${subFileCount} NODES</div>
-            </div>
-        </button>
+    const sectionDiv = document.createElement('div');
+    sectionDiv.className = 'folder-section group/folder';
+    sectionDiv.setAttribute('data-folder', sub);
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-24 gap-x-12 file-grid hidden pt-12">
-            ${filesHTML}
+    const btn = document.createElement('button');
+    btn.onclick = () => window.toggleFolder(btn);
+    btn.className = 'w-full flex flex-col lg:flex-row items-end justify-between mb-12 gap-12 text-left hover:bg-white/5 p-4 -m-4 transition-all duration-300';
+
+    btn.innerHTML = `
+        <div class="flex-1">
+            <div class="flex items-center gap-4 mb-6">
+                <span class="text-[9px] font-black font-mono text-white/20 tracking-[0.4em]">FRAGMENT_0${subIdx + 1}</span>
+                <span class="h-px w-12 bg-white/10"></span>
+                <span class="text-red-500 font-black tracking-[0.5em] uppercase text-[9px] italic">CHAPTER_ARCHIVE</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <span class="text-4xl serif-display text-red-600 transition-transform duration-300 group-[.is-open]/folder:rotate-45">+</span>
+                <h4 class="text-5xl lg:text-6xl serif-display leading-none text-white italic">${sub.replace(/</g, '&lt;')}</h4>
+            </div>
         </div>
-      </div>
+        <div class="text-right border-r border-white/10 pr-8">
+            <div class="text-[9px] font-black uppercase tracking-widest text-white/30 mb-2">Logs_Count</div>
+            <div class="text-xs font-bold font-mono text-white tracking-widest uppercase">${subFileCount} NODES</div>
+        </div>
     `;
+
+    const grid = document.createElement('div');
+    grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-24 gap-x-12 file-grid hidden pt-12';
+
+    sectionFiles.forEach(item => {
+      if (item.type === 'file') {
+        const temp = document.createElement('div');
+        temp.innerHTML = item.content;
+        grid.appendChild(temp.firstElementChild);
+      } else {
+        const header = document.createElement('div');
+        header.className = 'col-span-full pt-12 mt-12 border-t border-white/5 flex items-center justify-between';
+        header.innerHTML = `
+            <span class="text-[10px] font-black tracking-[0.4em] text-white/20 uppercase font-mono italic"></span>
+            <span class="h-px flex-1 mx-8 bg-white/5"></span>
+            <span class="text-[9px] font-black text-red-500 font-mono tracking-widest"></span>
+        `;
+        header.querySelector('span:first-child').textContent = item.text;
+        header.querySelector('span:last-child').textContent = `${item.count} FILES`;
+        grid.appendChild(header);
+      }
+    });
+
+    sectionDiv.appendChild(btn);
+    sectionDiv.appendChild(grid);
+    container.appendChild(sectionDiv);
   });
-
-  // Update file count
-  const fileCountEl = document.getElementById('file-count');
-  if (fileCountEl) fileCountEl.textContent = `${totalFiles} NODES_SYNCED`;
-
-  container.innerHTML = sectionsHTML;
 
   // Search Logic
   setupSearch(container);
@@ -177,19 +204,22 @@ export function toggleFolder(headerBtn) {
 }
 
 function generateFileCard(file, userClass, subject, sub, subSub, index, user) {
-  const fileIcon = getFileIcon(file.split('.').pop().toLowerCase());
-  const fileName = file.replace(/\.[^/.]+$/, "");
   const fileExt = file.split('.').pop().toUpperCase();
+  const fileName = file.replace(/\.[^/.]+$/, "");
   const fileId = `${userClass}-${subject}-${sub}-${subSub ? subSub + '-' : ''}${file}`.replace(/\s+/g, '-');
   const path = subSub
     ? `../assets/Study Library/class ${userClass}/${subject}/${sub}/${subSub}/${file}`
     : `../assets/Study Library/class ${userClass}/${subject}/${sub}/${file}`;
 
-  // Alternate visual tension
   const isAlt = index % 2 === 1;
+  const safeFileId = fileId.replace(/\./g, '-');
 
   // Initialize likes
   initLikeButton(fileId, user);
+
+  // We return the HTML but we will use textContent for the actual sensitive parts later if possible
+  // However, for performance and simplicity in this specific architecture, we'll use a safer template.
+  // Note: fileName and subject come from local JSON, but we'll treat them as untrusted.
 
   return `
     <div class="file-card group relative p-10 border-2 border-white transition-all duration-300 flex flex-col justify-between h-full min-h-[340px] cursor-default
@@ -202,26 +232,29 @@ function generateFileCard(file, userClass, subject, sub, subSub, index, user) {
         </div>
         
         <div class="flex-1">
-          <h5 class="text-3xl lg:text-4xl serif-display italic leading-tight mb-4 group-hover:underline decoration-red-600 decoration-3 transition-all truncate" title="${fileName}">${fileName}</h5>
+          <h5 class="text-3xl lg:text-4xl serif-display italic leading-tight mb-4 group-hover:underline decoration-red-600 decoration-3 transition-all truncate" 
+              title="${fileName.replace(/"/g, '&quot;')}"
+              style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+              data-text-filename="${fileName.replace(/"/g, '&quot;')}">${fileName.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</h5>
           <div class="flex items-center gap-2 mb-8">
-            <span class="text-[40px] grayscale contrast-125">${fileIcon}</span>
+            <span class="text-[40px] grayscale contrast-125">${getFileIcon(file.split('.').pop().toLowerCase())}</span>
           </div>
         </div>
 
         <div class="mt-8 pt-8 border-t-2 ${isAlt ? 'border-black/10' : 'border-white/10'} flex flex-col gap-4">
           <div class="flex gap-2">
-            <button onclick="window.viewMaterial('${path}', '${file}')"
+            <button onclick="window.viewMaterial('${path.replace(/'/g, "\\'")}', '${file.replace(/'/g, "\\'")}')"
                     class="bg-black text-white px-4 py-3 flex-1 text-[9px] font-black uppercase tracking-widest hover:bg-red-600 transition-all ${isAlt ? '' : 'border border-white/20'}">
               INSPECT
             </button>
-            <button id="like-${fileId.replace(/\./g, '-')}" 
+            <button id="like-${safeFileId}" 
                     class="px-4 py-3 border-2 ${isAlt ? 'border-black text-black' : 'border-white text-white'} text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-red-600 hover:text-black hover:border-red-600 transition-all like-btn"
                     data-file-id="${fileId}">
               <span class="material-symbols-outlined text-sm">favorite</span>
               <span class="like-count">...</span>
             </button>
           </div>
-          <button onclick="window.downloadMaterial('${path}', '${file}')"
+          <button onclick="window.downloadMaterial('${path.replace(/'/g, "\\'")}', '${file.replace(/'/g, "\\'")}')"
                   class="w-full bg-red-600 text-black py-3 text-[9px] font-black uppercase tracking-widest hover:bg-white border-2 border-red-600 hover:border-white transition-all">
             SYNCHRONIZE_DATA
           </button>
@@ -345,32 +378,54 @@ function getFileIcon(fileType) {
 function showLoadingSpinner(containerSelector) {
   const container = document.querySelector(containerSelector);
   if (!container) return;
-  container.innerHTML = `
-    <div class="col-span-full py-32 flex flex-col items-start border-t-2 border-white">
-      <div class="text-8xl serif-display italic text-white animate-pulse mb-8">Synchronizing Archive...</div>
-      <div class="w-full h-1 bg-white/10 relative overflow-hidden">
-        <div class="absolute inset-y-0 h-full bg-red-600 animate-[loading-bar_2s_infinite]"></div>
-      </div>
-      <style>
-        @keyframes loading-bar {
-            0% { left: -100%; width: 50%; }
-            100% { left: 100%; width: 50%; }
-        }
-      </style>
-    </div>
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'col-span-full py-32 flex flex-col items-start border-t-2 border-white';
+
+  const h = document.createElement('div');
+  h.className = 'text-8xl serif-display italic text-white animate-pulse mb-8';
+  h.textContent = 'Synchronizing Archive...';
+
+  const barContainer = document.createElement('div');
+  barContainer.className = 'w-full h-1 bg-white/10 relative overflow-hidden';
+
+  const bar = document.createElement('div');
+  bar.className = 'absolute inset-y-0 h-full bg-red-600 animate-[loading-bar_2s_infinite]';
+
+  barContainer.appendChild(bar);
+  loadingDiv.appendChild(h);
+  loadingDiv.appendChild(barContainer);
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes loading-bar {
+        0% { left: -100%; width: 50%; }
+        100% { left: 100%; width: 50%; }
+    }
   `;
+  loadingDiv.appendChild(style);
+
+  container.innerHTML = '';
+  container.appendChild(loadingDiv);
 }
 
 // Show notification
 function showNotification(message, type) {
   const notification = document.createElement('div');
   notification.className = `fixed bottom-0 right-0 p-12 z-50 transform translate-x-full transition-all duration-700 bg-black border-l-8 ${type === 'success' ? 'border-green-500' : 'border-red-600'} text-white shadow-2xl`;
-  notification.innerHTML = `
-    <div class="flex flex-col gap-4">
-        <span class="text-[9px] font-black tracking-[0.4em] uppercase text-white/40 italic">System_Broadcast</span>
-        <div class="text-3xl serif-display italic">${message}</div>
-    </div>
-  `;
+  const flexDiv = document.createElement('div');
+  flexDiv.className = 'flex flex-col gap-4';
+
+  const typeSpan = document.createElement('span');
+  typeSpan.className = 'text-[9px] font-black tracking-[0.4em] uppercase text-white/40 italic';
+  typeSpan.textContent = 'System_Broadcast';
+
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'text-3xl serif-display italic';
+  msgDiv.textContent = message;
+
+  flexDiv.appendChild(typeSpan);
+  flexDiv.appendChild(msgDiv);
+  notification.appendChild(flexDiv);
 
   document.body.appendChild(notification);
   setTimeout(() => notification.classList.remove('translate-x-full'), 100);

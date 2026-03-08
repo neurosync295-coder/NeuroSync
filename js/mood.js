@@ -1,8 +1,5 @@
-// mood.js - Enhanced mood logging, rewards, and interactive chatbot
-
-
-const auth = getAuth();
-const db = getFirestore();
+import { supabase } from './supabase.js';
+import { updateRewards } from './rewards.js';
 
 // Conversation state management
 let conversationState = {
@@ -151,30 +148,41 @@ export function initMoodLogging() {
   }
 }
 
-// Log mood to Firebase
+// Log mood to Supabase (Secure version)
 export async function logMood(mood, level) {
-  const user = auth.currentUser;
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
+
   if (!user) {
     showNotification('Please log in to log your mood.', 'error');
     return;
   }
 
   try {
-    // Add mood entry
-    await addDoc(collection(db, 'Moods'), {
-      userId: user.uid,
-      mood: mood,
-      level: level,
-      timestamp: new Date()
-    });
+    // Add mood entry to Supabase
+    const { error: moodError } = await supabase
+      .from('moods')
+      .insert({
+        user_id: user.id,
+        mood: mood,
+        level: level,
+        created_at: new Date().toISOString()
+      });
 
-    // Update rewards
-    await updateRewards(user.uid, 2); // 2 points for logging mood
+    if (moodError) throw moodError;
+
+    // Update rewards via secure RPC (handle cooldown on server)
+    const result = await updateRewards(user.id, 'mood_log');
+
+    if (result.success) {
+      showNotification(`Mood logged: ${mood}! +2 points earned.`, 'success');
+    } else {
+      // Cooldown message or other rejection from server
+      showNotification(result.message || 'Mood logged, but no points awarded.', 'info');
+    }
 
     // Reload recent moods
     await loadRecentMoods();
-
-    showNotification(`Mood logged: ${mood}! +2 points earned.`, 'success');
 
   } catch (error) {
     console.error('Error logging mood:', error);
@@ -182,56 +190,7 @@ export async function logMood(mood, level) {
   }
 }
 
-// Update rewards points and recalculate level
-async function updateRewards(userId, pointsToAdd) {
-  const rewardsRef = doc(db, 'Rewards', userId);
-
-  try {
-    const rewardsDoc = await getDoc(rewardsRef);
-    let currentPoints = 0;
-    let currentLevel = 1;
-
-    if (rewardsDoc.exists()) {
-      const data = rewardsDoc.data();
-      currentPoints = data.totalPoints || 0;
-      currentLevel = data.avatarLevel || 1;
-    }
-
-    const newPoints = currentPoints + pointsToAdd;
-    const newLevel = calculateLevel(newPoints);
-
-    await updateDoc(rewardsRef, {
-      userId: userId,
-      totalPoints: newPoints,
-      avatarLevel: newLevel,
-      lastUpdated: new Date()
-    }, { merge: true });
-
-    console.log(`Rewards updated: ${currentPoints} -> ${newPoints} points, Level ${currentLevel} -> ${newLevel}`);
-
-  } catch (error) {
-    console.error('Error updating rewards:', error);
-    // If document doesn't exist, create it
-    if (error.code === 'not-found') {
-      await updateDoc(rewardsRef, {
-        userId: userId,
-        totalPoints: pointsToAdd,
-        avatarLevel: 1,
-        badges: [],
-        lastUpdated: new Date()
-      });
-    }
-  }
-}
-
-// Calculate avatar level based on points
-function calculateLevel(points) {
-  if (points >= 500) return 5;
-  if (points >= 300) return 4;
-  if (points >= 150) return 3;
-  if (points >= 50) return 2;
-  return 1;
-}
+// Legacy reward functions removed. Points are now handled via RPC in rewards.js.
 
 // Show notification
 function showNotification(message, type) {
@@ -249,23 +208,28 @@ function showNotification(message, type) {
   }, 3000);
 }
 
-// Load recent moods for display
+// Load recent moods for display from Supabase
 export async function loadRecentMoods() {
-  const user = auth.currentUser;
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
   if (!user) return;
 
   try {
-    const moodsRef = collection(db, 'Moods');
-    const q = query(moodsRef, where('userId', '==', user.uid), orderBy('timestamp', 'desc'), limit(5));
-    const querySnapshot = await getDocs(q);
+    const { data: moods, error } = await supabase
+      .from('moods')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (error) throw error;
 
     const moodHistory = document.getElementById('mood-history');
     if (!moodHistory) return;
 
     moodHistory.innerHTML = '';
 
-    querySnapshot.forEach((doc) => {
-      const mood = doc.data();
+    moods.forEach((mood) => {
       const moodItem = document.createElement('div');
       moodItem.className = 'flex items-center justify-between p-3 bg-secondary rounded-lg';
       moodItem.innerHTML = `
@@ -273,7 +237,7 @@ export async function loadRecentMoods() {
           <span class="text-2xl">${getMoodEmoji(mood.mood)}</span>
           <div>
             <p class="font-medium">${mood.mood}</p>
-            <p class="text-sm text-secondary">${new Date(mood.timestamp.toDate()).toLocaleDateString()}</p>
+            <p class="text-sm text-secondary">${new Date(mood.created_at).toLocaleDateString()}</p>
           </div>
         </div>
         <span class="text-accent">+2 pts</span>

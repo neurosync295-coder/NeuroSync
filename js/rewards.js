@@ -268,47 +268,19 @@ export async function checkAndAwardBadges(userId) {
   }
 }
 
-// Update rewards points and recalculate level in Supabase
-export async function updateRewards(userId, pointsToAdd) {
+// Update rewards points and recalculate level in Supabase (Secure RPC version)
+export async function updateRewards(userId, activityType) {
   try {
-    const { data: rewards, error: fetchError } = await supabase
-      .from('rewards')
-      .select('total_points, avatar_level')
-      .eq('user_id', userId)
-      .single();
+    const { data, error } = await supabase.rpc('add_points', {
+      activity_type: activityType
+    });
 
-    if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+    if (error) throw error;
 
-    let currentPoints = 0;
-    let currentLevel = 1;
-
-    if (rewards) {
-      currentPoints = rewards.total_points || 0;
-      currentLevel = rewards.avatar_level || 1;
+    if (data && !data.success) {
+      console.warn('Point addition rejected:', data.message);
+      return { success: false, message: data.message };
     }
-
-    const newPoints = currentPoints + pointsToAdd;
-    const newLevel = calculateLevel(newPoints);
-
-    // Update rewards table
-    const { error: upsertError } = await supabase
-      .from('rewards')
-      .upsert({
-        user_id: userId,
-        total_points: newPoints,
-        avatar_level: newLevel
-      });
-
-    if (upsertError) throw upsertError;
-
-    // Sync to profiles table for global sidebar/profile access
-    await supabase
-      .from('profiles')
-      .update({
-        total_points: newPoints,
-        avatar_level: newLevel
-      })
-      .eq('id', userId);
 
     // Check for level up or badges
     await checkAndAwardBadges(userId);
@@ -318,7 +290,7 @@ export async function updateRewards(userId, pointsToAdd) {
       loadRewardsData();
     }
 
-    return { success: true, newPoints, newLevel };
+    return { success: true, pointsAdded: data.points_added };
 
   } catch (error) {
     console.error('Error updating rewards:', error);

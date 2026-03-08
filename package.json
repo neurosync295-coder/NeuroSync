@@ -1,12 +1,9 @@
 {
   "scripts": {
-    "build": "mkdir -p dist && cp -r index.html html css js assets dist",
+    "build": "if exist dist rmdir /s /q dist && mkdir dist && xcopy /E /I index.html dist\\ && xcopy /E /I html dist\\html\\ && xcopy /E /I css dist\\css\\ && xcopy /E /I js dist\\js\\ && xcopy /E /I assets dist\\assets\\",
     "deploy": "wrangler deploy"
   },
-  "dependencies": {
-    "@dataconnect/generated": "file:src/dataconnect-generated",
-    "firebase": "^12.2.1"
-  },
+  "dependencies": {},
   "devDependencies": {
     "wrangler": "^3.0.0"
   }

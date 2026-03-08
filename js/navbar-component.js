@@ -12,12 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initUniversalNavbar() {
-    // Determine path prefix based on location
-    const isInHtmlDir = window.location.pathname.includes('/html/');
-    const pfx = isInHtmlDir ? '../' : './';
-    const htmlPfx = isInHtmlDir ? '' : 'html/';
-
-    console.log(`[Navbar] Init: isInHtmlDir=${isInHtmlDir}, pfx=${pfx}`);
+    // Root-relative paths for subdomain stability
+    const pfx = '/';
+    const htmlPfx = '/html/';
 
     const navbarHTML = `
         <header id="universal-navbar" class="fixed top-0 left-0 right-0 z-40 h-16 border-b border-white/5 bg-black/80 backdrop-blur-xl">
@@ -129,7 +126,7 @@ function highlightActiveLink() {
 }
 
 function setupAuthSync(pfx) {
-    const importPath = NAVBAR_SCRIPT_BASE ? `${NAVBAR_SCRIPT_BASE}supabase.js` : './supabase.js';
+    const importPath = '/js/supabase.js';
     import(importPath).then(({ supabase }) => {
         // Initial Session Check
         handleAuthState(null, null, supabase);

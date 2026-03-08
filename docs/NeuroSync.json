@@ -1,8 +1,7 @@
 {
   "project": "NeuroSync",
-  "description": "AI-powered focus and mental wellbeing companion for students (Classes 9–12). Built using Firebase for backend and Firestore for database.",
-  "mainKey": "userId (same as Firebase Auth UID)",
-
+  "description": "AI-powered focus and mental wellbeing companion for students (Classes 9–12). Built using Supabase as the modern backend.",
+  "mainKey": "userId (Supabase Auth UID)",
   "collections": {
     "Profiles": {
       "description": "Stores each user's personal and academic info.",
@@ -18,7 +17,6 @@
         "createdAt": "timestamp"
       }
     },
-
     "Moods": {
       "description": "Tracks user mood logs to monitor wellbeing and add mood-based reward points.",
       "documentId": "auto-id",
@@ -31,7 +29,6 @@
       },
       "rewardEffect": "Adds +2 points to Rewards.totalPoints per mood entry"
     },
-
     "FocusSessions": {
       "description": "Stores Pomodoro/focus timer session details and adds focus points.",
       "documentId": "auto-id",
@@ -46,7 +43,6 @@
       },
       "rewardEffect": "Adds +5 points to Rewards.totalPoints per completed session"
     },
-
     "Rewards": {
       "description": "Stores user total points, avatar level, and badges based on activity.",
       "documentId": "user.uid",
@@ -65,7 +61,6 @@
         "level5": "500+ points"
       }
     },
-
     "StudyLibrary": {
       "description": "Stores curated study materials uploaded by students and approved by teachers.",
       "documentId": "auto-id",
@@ -81,7 +76,6 @@
       },
       "rewardEffect": "Adds +10 points to Rewards.totalPoints per approved upload"
     },
-
     "Feedback": {
       "description": "Stores feedback from users about app experience and study materials.",
       "documentId": "auto-id",
@@ -93,7 +87,6 @@
       }
     }
   },
-
   "relations": [
     "Profiles.id = Auth.uid",
     "Moods.userId = Profiles.id",
@@ -102,7 +95,6 @@
     "StudyLibrary.submittedBy = Profiles.id",
     "Feedback.userId = Profiles.id"
   ],
-
   "automation": {
     "CloudFunction1": {
       "trigger": "onCreate(FocusSessions)",

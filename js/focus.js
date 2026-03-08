@@ -60,11 +60,11 @@ async function startFocusSession() {
 
   try {
     const { data, error } = await supabase
-      .from('focus_sessions')
       .insert({
         user_id: user.id,
         start_time: sessionStartTime.toISOString(),
         duration_minutes: 0,
+        target_duration_minutes: sessionDurationSeconds / 60,
         completed: false,
         session_type: 'Focus'
       })
@@ -117,30 +117,27 @@ async function resetFocusSession() {
   }
 }
 
-// Complete session
+// Complete session (Secure RPC version)
 async function completeFocusSession() {
   if (!currentSessionId) return;
-
-  const endTime = new Date();
-  const duration = Math.floor((endTime - sessionStartTime) / 1000 / 60);
-  const pointsEarned = 5;
 
   try {
     const { data: { session: authSession } } = await supabase.auth.getSession();
     const user = authSession?.user;
     if (!user) return;
 
-    await supabase
-      .from('focus_sessions')
-      .update({
-        end_time: endTime.toISOString(),
-        duration_minutes: duration,
-        completed: true,
-        xp_earned: pointsEarned
-      })
-      .eq('id', currentSessionId);
+    // Call secure RPC to verify and complete
+    const { data, error } = await supabase.rpc('complete_focus_session', {
+      session_id: currentSessionId
+    });
 
-    await updateRewards(user.id, pointsEarned);
+    if (error) throw error;
+
+    if (data && !data.success) {
+      showNotification(data.message, 'error');
+      // If they cheated, we don't clear the interval, let them continue or reset
+      return;
+    }
 
     clearInterval(sessionInterval);
     isSessionRunning = false;
@@ -149,10 +146,11 @@ async function completeFocusSession() {
 
     document.getElementById('start-btn').style.display = 'flex';
     document.getElementById('pause-btn').style.display = 'none';
-    showNotification(`Session completed! +${pointsEarned} points.`, 'success');
+    showNotification(`Session completed! Points earned.`, 'success');
 
   } catch (error) {
     console.error('Error completing session:', error);
+    showNotification('Error finalizing session.', 'error');
   }
 }
 

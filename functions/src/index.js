@@ -6,9 +6,9 @@ admin.initializeApp();
 
 // Configure Cloudinary
 cloudinary.config({
-  cloud_name: 'dwlxccz91',
-  api_key: '499129969588495',
-  api_secret: 'dWeJIxy56N5V2rHpzYPcWKs41t8'
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dwlxccz91',
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 // Cloud Function to get study materials from Cloudinary based on user class

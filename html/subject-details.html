@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.supabase.co https://res.cloudinary.com https://*.googleusercontent.com; connect-src 'self' https://*.supabase.co https://www.soundjay.com; media-src 'self' https://www.soundjay.com;">
     <title>Archive Explorer // Swiss Brutalism</title>
 
     <!-- Custom Fonts -->
@@ -18,7 +20,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
     <!-- Custom CSS Base -->
-    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="/css/global.css">
     <style>
         :root {
             --bg-obsidian: #000000;
@@ -92,19 +94,19 @@
     </style>
 
     <!-- Scripts -->
-    <script src="../js/sidemenu.js"></script>
-    <script src="../js/theme.js"></script>
-    <script src="../js/navbar-component.js"></script>
+    <script src="/js/sidemenu.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/navbar-component.js"></script>
     <script type="module">
-        import { supabase } from '../js/supabase.js';
+        import { supabase } from '/js/supabase.js';
 
         // Check authentication
         supabase.auth.onAuthStateChange((event, session) => {
             if (!session && event !== 'INITIAL_SESSION') {
-                window.location.href = 'auth.html';
+                if (!session) window.location.href = '/html/auth.html';
             } else if (session) {
                 // Initialize subject details
-                import('../js/subject-details.js').then(module => {
+                import('/js/subject-details.js').then(module => {
                     module.initSubjectDetails();
                 });
             }

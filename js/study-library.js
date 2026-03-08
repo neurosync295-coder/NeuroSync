@@ -62,12 +62,20 @@ function displayLocalMaterials(userClass) {
 
   const classData = materialsStructure[userClass];
   if (!classData) {
-    container.innerHTML = `
-      <div class="col-span-full border-4 border-white p-20 text-left bg-black">
-        <h3 class="text-6xl serif-display italic text-white mb-6">Database_Empty.</h3>
-        <p class="text-[10px] text-red-500 font-black uppercase tracking-[0.4em]">ERR_0x404 // DATASET_NOT_REGISTERED</p>
-      </div>
-    `;
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'col-span-full border-4 border-white p-20 text-left bg-black';
+
+    const h3 = document.createElement('h3');
+    h3.className = 'text-6xl serif-display italic text-white mb-6';
+    h3.textContent = 'Database_Empty.';
+
+    const p = document.createElement('p');
+    p.className = 'text-[10px] text-red-500 font-black uppercase tracking-[0.4em]';
+    p.textContent = 'ERR_0x404 // DATASET_NOT_REGISTERED';
+
+    errorDiv.appendChild(h3);
+    errorDiv.appendChild(p);
+    container.appendChild(errorDiv);
     return;
   }
 
@@ -79,22 +87,38 @@ function displayLocalMaterials(userClass) {
       window.location.href = `subject-details.html?subject=${encodeURIComponent(subject)}&class=${userClass}`;
     };
 
-    card.innerHTML = `
-      <div class="flex items-start justify-between mb-8">
-        <div class="text-[9px] font-black font-mono text-white/20 tracking-[0.4em]">0${idx + 1} // ARCHIVE</div>
-        <span class="text-[10px] font-black text-red-500 italic uppercase tracking-widest group-hover:translate-x-4 transition-transform">ACCESS_DIR</span>
-      </div>
-      
-      <h3 class="text-6xl lg:text-7xl serif-display leading-none text-white italic group-hover:text-red-600 transition-colors mb-6">${subject}</h3>
-      
-      <p class="text-[10px] text-white/40 leading-relaxed uppercase font-medium max-w-sm">
-        Initialize synchronization with ${subject} logic modules. Accessing distributed archive vectors for level 0${userClass} academic sync.
-      </p>
+    const metaDiv = document.createElement('div');
+    metaDiv.className = 'flex items-start justify-between mb-8';
 
-      <div class="mt-12 h-1 bg-white/5 w-full overflow-hidden">
-         <div class="h-full bg-red-600 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700 ease-in-out"></div>
-      </div>
-    `;
+    const archiveSpan = document.createElement('div');
+    archiveSpan.className = 'text-[9px] font-black font-mono text-white/20 tracking-[0.4em]';
+    archiveSpan.textContent = `0${idx + 1} // ARCHIVE`;
+
+    const accessSpan = document.createElement('span');
+    accessSpan.className = 'text-[10px] font-black text-red-500 italic uppercase tracking-widest group-hover:translate-x-4 transition-transform';
+    accessSpan.textContent = 'ACCESS_DIR';
+
+    metaDiv.appendChild(archiveSpan);
+    metaDiv.appendChild(accessSpan);
+
+    const h3 = document.createElement('h3');
+    h3.className = 'text-6xl lg:text-7xl serif-display leading-none text-white italic group-hover:text-red-600 transition-colors mb-6';
+    h3.textContent = subject;
+
+    const p = document.createElement('p');
+    p.className = 'text-[10px] text-white/40 leading-relaxed uppercase font-medium max-w-sm';
+    p.textContent = `Initialize synchronization with ${subject} logic modules. Accessing distributed archive vectors for level 0${userClass} academic sync.`;
+
+    const progressDiv = document.createElement('div');
+    progressDiv.className = 'mt-12 h-1 bg-white/5 w-full overflow-hidden';
+    const progressBar = document.createElement('div');
+    progressBar.className = 'h-full bg-red-600 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700 ease-in-out';
+    progressDiv.appendChild(progressBar);
+
+    card.appendChild(metaDiv);
+    card.appendChild(h3);
+    card.appendChild(p);
+    card.appendChild(progressDiv);
 
     container.appendChild(card);
   });
@@ -115,32 +139,54 @@ function showLoadingSpinner(containerSelector) {
   const container = document.querySelector(containerSelector);
   if (!container) return;
 
-  container.innerHTML = `
-    <div class="col-span-full py-32 flex flex-col items-start border-t-2 border-white">
-      <div class="text-8xl serif-display italic text-white animate-pulse mb-8">Loading Archive...</div>
-      <div class="w-full h-1 bg-white/10 relative overflow-hidden">
-        <div class="absolute inset-y-0 h-full bg-red-600 animate-[loading-bar_2s_infinite]"></div>
-      </div>
-      <style>
-        @keyframes loading-bar {
-            0% { left: -100%; width: 50%; }
-            100% { left: 100%; width: 50%; }
-        }
-      </style>
-    </div>
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'col-span-full py-32 flex flex-col items-start border-t-2 border-white';
+
+  const h = document.createElement('div');
+  h.className = 'text-8xl serif-display italic text-white animate-pulse mb-8';
+  h.textContent = 'Loading Archive...';
+
+  const barContainer = document.createElement('div');
+  barContainer.className = 'w-full h-1 bg-white/10 relative overflow-hidden';
+
+  const bar = document.createElement('div');
+  bar.className = 'absolute inset-y-0 h-full bg-red-600 animate-[loading-bar_2s_infinite]';
+
+  barContainer.appendChild(bar);
+  loadingDiv.appendChild(h);
+  loadingDiv.appendChild(barContainer);
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes loading-bar {
+        0% { left: -100%; width: 50%; }
+        100% { left: 100%; width: 50%; }
+    }
   `;
+  loadingDiv.appendChild(style);
+
+  container.innerHTML = '';
+  container.appendChild(loadingDiv);
 }
 
 // Show notification
 function showNotification(message, type) {
   const notification = document.createElement('div');
   notification.className = `fixed bottom-0 right-0 p-12 z-50 transform translate-x-full transition-all duration-700 bg-black border-l-8 ${type === 'success' ? 'border-green-500' : 'border-red-600'} text-white shadow-2xl`;
-  notification.innerHTML = `
-    <div class="flex flex-col gap-4">
-        <span class="text-[9px] font-black tracking-[0.4em] uppercase text-white/40 italic">System_Broadcast</span>
-        <div class="text-3xl serif-display italic">${message}</div>
-    </div>
-  `;
+  const flexDiv = document.createElement('div');
+  flexDiv.className = 'flex flex-col gap-4';
+
+  const typeSpan = document.createElement('span');
+  typeSpan.className = 'text-[9px] font-black tracking-[0.4em] uppercase text-white/40 italic';
+  typeSpan.textContent = 'System_Broadcast';
+
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'text-3xl serif-display italic';
+  msgDiv.textContent = message;
+
+  flexDiv.appendChild(typeSpan);
+  flexDiv.appendChild(msgDiv);
+  notification.appendChild(flexDiv);
 
   document.body.appendChild(notification);
   setTimeout(() => notification.classList.remove('translate-x-full'), 100);
