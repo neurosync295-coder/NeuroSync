@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "if exist dist rmdir /s /q dist && mkdir dist && xcopy /E /I index.html dist\\ && xcopy /E /I html dist\\html\\ && xcopy /E /I css dist\\css\\ && xcopy /E /I js dist\\js\\ && xcopy /E /I assets dist\\assets\\",
+    "build": "node build.js",
     "deploy": "wrangler deploy"
   },
   "dependencies": {},
