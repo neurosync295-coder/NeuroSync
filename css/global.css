@@ -37,8 +37,11 @@
   --border-primary: #27272A;
   --border-raw: #27272A;
   --accent-signal: #F97316;
-  --accent-signal-dim: rgba(249,115,22,0.15);
+  --accent-signal-dim: rgba(249, 115, 22, 0.15);
   --primary-color: #F97316;
+  --bg-obsidian: #0A0A0B;
+  --bg-graphite: #1E1E20;
+  --border-raw: 1px solid #27272A;
 }
 
 /* Fonts */
@@ -552,4 +555,102 @@ body.light {
 
 .light #side-profile-box:hover {
   background-color: rgba(237, 233, 254, 0.7);
+}
+
+/* === Obsidian Stream Technical Utilities === */
+.telemetry-label {
+  font-family: 'Space Grotesk', monospace;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #A1A1AA;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.telemetry-value {
+  color: var(--accent-signal, #F97316);
+  font-weight: 700;
+}
+
+.status-bar-wrap {
+  width: 100px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.status-bar-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--accent-signal, #F97316);
+  width: 65%;
+  animation: telemetry-pulse 2s infinite ease-in-out;
+}
+
+@keyframes telemetry-pulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.signal-bar {
+  width: 3px;
+  height: 24px;
+  background: var(--accent-signal, #F97316);
+  display: block;
+}
+
+/* Base Body Decoration (Scan-lines) */
+.obsidian-stream-body {
+  position: relative;
+}
+
+.obsidian-stream-body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.012) 2px,
+      rgba(255, 255, 255, 0.012) 4px);
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* Enhanced Particles */
+.particle {
+  position: fixed;
+  background-color: var(--accent-signal, #F97316);
+  border-radius: 0px;
+  opacity: 0;
+  animation: particle-animation 20s infinite;
+  z-index: -2;
+}
+
+@keyframes particle-animation {
+  0% {
+    transform: translate(var(--x-start), var(--y-start)) scale(0);
+    opacity: 0.1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+
+  100% {
+    transform: translate(var(--x-end), var(--y-end)) scale(1.5);
+    opacity: 0;
+  }
 }

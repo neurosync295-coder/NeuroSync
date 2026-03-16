@@ -11,7 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-    <title>Feedback - NeuroSync</title>
+    <title>Neural Feedback - NeuroSync</title>
     <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link rel="stylesheet" href="/css/global.css" />
@@ -19,6 +19,7 @@
     <script src="/js/sidemenu.js"></script>
     <script src="/js/theme.js"></script>
     <script src="/js/navbar-component.js"></script>
+    <script type="module" src="/js/auth-guard.js"></script>
     <script type="module">
         import { initFeedback, loadUserFeedback } from '/js/feedback.js';
         import { supabase } from '/js/supabase.js';
@@ -55,35 +56,124 @@
                     .single();
 
                 const data = profile || {};
-                const displayName = `${data.first_name || ''} ${data.last_name || ''}`.trim() || user.email.split('@')[0] || 'User';
+                const displayName = `${data.first_name || ''} ${data.last_name || ''}`.trim() || user.email.split('@')[0] || 'USER_UNK';
 
                 const elements = {
                     'display-name': displayName,
                     'display-email': user.email,
-                    'display-class': data.class_grade || 'Not specified',
-                    'display-role': data.role || 'Student'
+                    'display-class': data.class_grade || 'UNKNOWN',
+                    'display-role': data.role || 'STUDENT'
                 };
 
                 for (const [id, value] of Object.entries(elements)) {
                     const el = document.getElementById(id);
-                    if (el) el.textContent = value;
+                    if (el) el.textContent = value.toUpperCase();
                 }
             } catch (error) {
                 console.error('Error loading profile:', error);
             }
         }
-
-        function showNotification(message, type) {
-            const notification = document.createElement('div');
-            notification.className = `fixed top-10 right-10 p-4 rounded-xl shadow-2xl z-[100] text-white animate-fade-in ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
-        }
     </script>
+    <style>
+        .star-node {
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .star-node.active {
+            background-color: var(--accent-signal) !important;
+            box-shadow: 0 0 15px var(--accent-signal-dim);
+            transform: scale(1.1);
+        }
+        .star-node:hover {
+            transform: scale(1.2);
+        }
+        
+        .tech-panel {
+            background: linear-gradient(135deg, rgba(22, 22, 24, 0.9) 0%, rgba(13, 13, 14, 0.95) 100%);
+            border: 1px solid #27272A;
+            position: relative;
+        }
+        
+        .tech-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-signal), transparent);
+            opacity: 0.3;
+        }
+
+        /* Scanline effect for inputs */
+        .tech-input {
+            background: rgba(13, 13, 14, 0.6);
+            border: 1px solid #27272A;
+            color: #FAFAFA;
+            transition: all 0.3s ease;
+            border-radius: 0 !important;
+        }
+        .tech-input:focus {
+            border-color: var(--accent-signal);
+            box-shadow: 0 0 0 1px var(--accent-signal) inset, 0 0 10px rgba(249, 115, 22, 0.1);
+            outline: none;
+            background: rgba(22, 22, 24, 0.8);
+        }
+        
+        /* Submit button geometric */
+        .btn-neural {
+            background: transparent;
+            border: 1px solid var(--accent-signal);
+            color: var(--accent-signal);
+            position: relative;
+            overflow: hidden;
+            border-radius: 0;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: bold;
+        }
+        .btn-neural::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-signal);
+            transition: all 0.3s ease;
+            z-index: -1;
+        }
+        .btn-neural:hover::before {
+            left: 0;
+        }
+        .btn-neural:hover {
+            color: #000;
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+        }
+        
+        /* Remove default scrollbar for textarea */
+        .tech-input::-webkit-scrollbar {
+            width: 4px;
+        }
+        .tech-input::-webkit-scrollbar-track {
+            background: #111112; 
+        }
+        .tech-input::-webkit-scrollbar-thumb {
+            background: #27272A; 
+        }
+        .tech-input::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-signal); 
+        }
+    </style>
 </head>
 
-<body class="bg-primary dark">
+<body class="bg-obsidian dark obsidian-stream-body">
+    <!-- Particles -->
+    <div class="particle" style="top: 20%; left: 10%; width: 2px; height: 2px; --x-start: 0; --y-start: 0; --x-end: 100px; --y-end: -100px;"></div>
+    <div class="particle" style="top: 60%; left: 80%; width: 3px; height: 3px; --x-start: 0; --y-start: 0; --x-end: -50px; --y-end: -150px; animation-delay: 2s;"></div>
+    <div class="particle" style="top: 80%; left: 30%; width: 1px; height: 1px; --x-start: 0; --y-start: 0; --x-end: 150px; --y-end: -50px; animation-delay: 5s;"></div>
+
     <div id="side-menu-container"></div>
     <div id="universal-navbar-container"></div>
 
@@ -91,112 +181,139 @@
         style='font-family: "Space Grotesk", "Noto Sans", sans-serif;'>
 
         <!-- Main Content -->
-        <main class="flex-1 p-6 lg:p-10">
-            <div class="max-w-4xl mx-auto">
-                <div class="text-center mb-10">
-                    <h1 class="text-4xl font-bold text-white mb-2">Feedback & Support</h1>
-                    <p class="text-[#ad92c9]">We value your thoughts on how to improve NeuroSync.</p>
+        <main class="flex-1 p-6 lg:p-10 relative z-10 flex items-center justify-center">
+            <div class="w-full max-w-5xl mx-auto">
+                <div class="mb-12 border-l-2 border-accent-signal pl-4">
+                    <div class="telemetry-label mb-2">
+                        <span class="material-symbols-outlined text-sm">terminal</span>
+                        UI_FEEDBACK_UPLINK
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-bold text-primary tracking-tight">TRANSMIT_SIGNAL</h1>
+                    <p class="text-secondary mt-2 font-mono text-sm max-w-md">Establish connection neural link for system performance review and cognitive enhancement requests.</p>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Feedback Form Area -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <section
-                            class="bg-[#1a1122]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
-                            <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                                <span class="material-symbols-outlined text-accent">edit_note</span>
-                                Share Your Thoughts
-                            </h2>
-                            <form id="feedback-form" class="space-y-6">
-                                <!-- Star Rating -->
-                                <div class="space-y-3">
-                                    <label class="text-sm font-medium text-gray-400">Overall Rating</label>
-                                    <div class="flex gap-2" id="star-rating">
-                                        <span
-                                            class="star text-3xl cursor-pointer text-gray-600 hover:scale-110 transition-transform"
-                                            data-rating="1">☆</span>
-                                        <span
-                                            class="star text-3xl cursor-pointer text-gray-600 hover:scale-110 transition-transform"
-                                            data-rating="2">☆</span>
-                                        <span
-                                            class="star text-3xl cursor-pointer text-gray-600 hover:scale-110 transition-transform"
-                                            data-rating="3">☆</span>
-                                        <span
-                                            class="star text-3xl cursor-pointer text-gray-600 hover:scale-110 transition-transform"
-                                            data-rating="4">☆</span>
-                                        <span
-                                            class="star text-3xl cursor-pointer text-gray-600 hover:scale-110 transition-transform"
-                                            data-rating="5">☆</span>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <!-- Feedback Form Area (Central Focus) -->
+                    <div class="lg:col-span-8 space-y-6">
+                        <section class="tech-panel p-8">
+                            <div class="flex items-center justify-between mb-8 border-b border-raw pb-4">
+                                <h2 class="text-xl font-bold text-primary flex items-center gap-3 tracking-wider">
+                                    <span class="material-symbols-outlined text-accent-signal">data_object</span>
+                                    DATA_PACKET_ENCODING
+                                </h2>
+                                <div class="status-bar-wrap">
+                                    <div class="status-bar-active"></div>
+                                </div>
+                            </div>
+
+                            <form id="feedback-form" class="space-y-8">
+                                <!-- Neural Rating -->
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-end">
+                                        <label class="telemetry-label">Signal_Strength_Rating</label>
+                                        <span id="rating-display" class="text-accent-signal font-mono text-sm font-bold">0.00</span>
+                                    </div>
+                                    <div class="flex gap-3 max-w-md" id="star-rating">
+                                        <div class="star-node w-12 h-12 bg-[#27272A] cursor-pointer flex items-center justify-center hover:bg-[#3F3F46]" data-rating="1"></div>
+                                        <div class="star-node w-12 h-12 bg-[#27272A] cursor-pointer flex items-center justify-center hover:bg-[#3F3F46]" data-rating="2"></div>
+                                        <div class="star-node w-12 h-12 bg-[#27272A] cursor-pointer flex items-center justify-center hover:bg-[#3F3F46]" data-rating="3"></div>
+                                        <div class="star-node w-12 h-12 bg-[#27272A] cursor-pointer flex items-center justify-center hover:bg-[#3F3F46]" data-rating="4"></div>
+                                        <div class="star-node w-12 h-12 bg-[#27272A] cursor-pointer flex items-center justify-center hover:bg-[#3F3F46]" data-rating="5"></div>
                                     </div>
                                     <input type="hidden" name="rating" id="feedback-rating" required>
                                 </div>
 
                                 <!-- Category & Message -->
-                                <div class="grid grid-cols-1 gap-6">
-                                    <div class="space-y-2">
-                                        <label class="text-sm font-medium text-gray-400">Category</label>
-                                        <select id="feedback-type" name="feedback-type" required
-                                            class="w-full bg-black/20 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-accent outline-none">
-                                            <option value="">Select Category</option>
-                                            <option value="Dashboard">Dashboard</option>
-                                            <option value="Mood Tracker">Mood Tracker</option>
-                                            <option value="Study Library">Study Library</option>
-                                            <option value="Performance">Performance</option>
-                                            <option value="Bug Report">Bug Report</option>
-                                            <option value="Feature Request">Feature Request</option>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="space-y-2 md:col-span-2">
+                                        <label class="telemetry-label">Transmission_Vector</label>
+                                        <select id="feedback-type" name="feedback-type" required class="tech-input w-full py-3 px-4 text-sm font-mono cursor-pointer appearance-none">
+                                            <option value="" class="bg-obsidian">SELECT_VECTOR</option>
+                                            <option value="Dashboard" class="bg-obsidian">SYS_DASHBOARD</option>
+                                            <option value="Mood Tracker" class="bg-obsidian">COG_MOOD_TRACKER</option>
+                                            <option value="Study Library" class="bg-obsidian">DAT_STUDY_LIBRARY</option>
+                                            <option value="Performance" class="bg-obsidian">SYS_PERFORMANCE</option>
+                                            <option value="Bug Report" class="bg-obsidian">ERR_BUG_REPORT</option>
+                                            <option value="Feature Request" class="bg-obsidian">REQ_FEATURE_UPDATE</option>
                                         </select>
                                     </div>
-                                    <div class="space-y-2">
-                                        <label class="text-sm font-medium text-gray-400">Subject</label>
+
+                                    <div class="space-y-2 md:col-span-2">
+                                        <label class="telemetry-label">Packet_Header</label>
                                         <input type="text" id="feedback-subject" name="feedback-subject" required
-                                            placeholder="Brief summary"
-                                            class="w-full bg-black/20 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-accent outline-none">
+                                            placeholder="INITIALIZE_HEADER_STRING..."
+                                            class="tech-input w-full py-3 px-4 font-mono text-sm">
                                     </div>
-                                    <div class="space-y-2">
-                                        <label class="text-sm font-medium text-gray-400">Your Feedback</label>
-                                        <textarea id="feedback-message" name="feedback-message" rows="5" required
-                                            placeholder="Tell us more..."
-                                            class="w-full bg-black/20 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-accent outline-none resize-none"></textarea>
+
+                                    <div class="space-y-2 md:col-span-2">
+                                        <label class="telemetry-label">Payload_Data</label>
+                                        <textarea id="feedback-message" name="feedback-message" rows="6" required
+                                            placeholder="ENCODE_PAYLOAD_HERE..."
+                                            class="tech-input w-full py-3 px-4 font-mono text-sm resize-none"></textarea>
                                     </div>
                                 </div>
 
-                                <div class="flex items-center gap-3 bg-white/5 p-4 rounded-xl border border-white/5">
-                                    <input type="checkbox" name="anonymous" id="anonymous"
-                                        class="rounded bg-black/40 border-white/10 text-accent focus:ring-accent">
-                                    <label for="anonymous" class="text-sm text-gray-300 cursor-pointer">Submit
-                                        anonymously</label>
-                                </div>
+                                <div class="flex items-center justify-between border-t border-raw pt-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="relative flex items-center">
+                                            <input type="checkbox" name="anonymous" id="anonymous"
+                                                class="peer shrink-0 appearance-none w-5 h-5 border border-raw bg-obsidian checked:bg-accent-signal checked:border-accent-signal cursor-pointer">
+                                            <svg class="absolute w-5 h-5 pointer-events-none hidden peer-checked:block text-black p-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        </div>
+                                        <label for="anonymous" class="font-mono text-xs text-secondary cursor-pointer hover:text-primary transition-colors">OBSCURE_ORIGIN_IP</label>
+                                    </div>
 
-                                <button type="submit"
-                                    class="w-full bg-accent hover:bg-accent-secondary text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-accent/20">
-                                    Submit Feedback
-                                </button>
+                                    <button type="submit" class="btn-neural py-3 px-8 text-sm flex items-center gap-2 z-10 hover:cursor-pointer">
+                                        <span>INITIATE_UPLINK</span>
+                                        <span class="material-symbols-outlined text-sm">bolt</span>
+                                    </button>
+                                </div>
                             </form>
                         </section>
                     </div>
 
-                    <!-- Sidebar Info / User Info / History -->
-                    <div class="space-y-6">
-                        <!-- User Info -->
-                        <div class="bg-[#1a1122]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6">
-                            <h3 class="text-lg font-bold text-white mb-4">Your Identity</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <p class="text-xs text-gray-400 uppercase tracking-wider">Name</p>
-                                    <p id="display-name" class="text-white font-medium">Loading...</p>
+                    <!-- Sidebar Async Data -->
+                    <div class="lg:col-span-4 space-y-6">
+                        <!-- Identity Card -->
+                        <div class="tech-panel p-6">
+                            <div class="flex items-center gap-2 mb-6">
+                                <span class="signal-bar"></span>
+                                <h3 class="telemetry-label m-0">ACTIVE_IDENTITY</h3>
+                            </div>
+                            
+                            <div class="space-y-5">
+                                <div class="border-b border-raw pb-3">
+                                    <p class="text-[10px] text-muted font-mono mb-1">USER_DESIGNATION</p>
+                                    <p id="display-name" class="text-primary font-mono text-sm bg-obsidian/50 px-2 py-1 inline-block border border-white/5">AWAITING_SYNC...</p>
                                 </div>
                                 <div>
-                                    <p class="text-xs text-gray-400 uppercase tracking-wider">Role</p>
-                                    <p id="display-role" class="text-white font-medium">Loading...</p>
+                                    <p class="text-[10px] text-muted font-mono mb-1">ACCESS_LEVEL</p>
+                                    <p id="display-role" class="text-accent-signal font-mono text-sm flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-accent-signal animate-pulse"></span>
+                                        AWAITING_SYNC...
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- History -->
-                        <div class="bg-[#1a1122]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-6">
-                            <h3 class="text-lg font-bold text-white mb-4">Recent Activity</h3>
-                            <div id="feedback-history" class="space-y-3">
-                                <!-- Loaded via JS -->
+                        <!-- System History -->
+                        <div class="tech-panel p-6 flex-1 h-full min-h-[300px]">
+                            <div class="flex justify-between items-center mb-6 border-b border-raw pb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-accent-signal text-sm">history</span>
+                                    <h3 class="telemetry-label m-0">TX_HISTORY</h3>
+                                </div>
+                            </div>
+                            <div id="feedback-history" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                <div class="animate-pulse flex space-x-4">
+                                  <div class="flex-1 space-y-4 py-1">
+                                    <div class="h-2 bg-[#27272A] rounded w-3/4"></div>
+                                    <div class="space-y-2">
+                                      <div class="h-2 bg-[#27272A] rounded"></div>
+                                      <div class="h-2 bg-[#27272A] rounded w-5/6"></div>
+                                    </div>
+                                  </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -208,21 +325,60 @@
     <!-- UI Scripts -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Star interaction
-            const stars = document.querySelectorAll('.star');
+            // Star interaction for Neural Nodes
+            const nodes = document.querySelectorAll('.star-node');
             const ratingInput = document.getElementById('feedback-rating');
+            const ratingDisplay = document.getElementById('rating-display');
 
-            stars.forEach((star, idx) => {
-                star.addEventListener('click', () => {
+            nodes.forEach((node, idx) => {
+                node.addEventListener('click', () => {
                     const rating = idx + 1;
                     ratingInput.value = rating;
-                    stars.forEach((s, i) => {
-                        s.textContent = i < rating ? '★' : '☆';
-                        s.classList.toggle('text-yellow-400', i < rating);
-                        s.classList.toggle('text-gray-600', i >= rating);
+                    
+                    // Update display text
+                    ratingDisplay.textContent = (rating * 1.0).toFixed(2);
+                    ratingDisplay.classList.add('animate-pulse');
+                    setTimeout(() => ratingDisplay.classList.remove('animate-pulse'), 500);
+
+                    nodes.forEach((n, i) => {
+                        if (i < rating) {
+                            n.classList.add('active');
+                            // Create a chain reaction effect
+                            setTimeout(() => {
+                                n.style.transform = 'scale(1.1)';
+                            }, i * 50);
+                        } else {
+                            n.classList.remove('active');
+                            n.style.transform = 'scale(1)';
+                        }
                     });
                 });
+                
+                // Hover effect for unselected nodes
+                node.addEventListener('mouseenter', () => {
+                   if(ratingInput.value) return; // don't disrupt if already selected
+                   nodes.forEach((n, i) => {
+                       if (i <= idx) n.style.backgroundColor = 'rgba(249, 115, 22, 0.4)';
+                   });
+                });
+                
+                node.addEventListener('mouseleave', () => {
+                   if(ratingInput.value) return; 
+                   nodes.forEach((n) => {
+                       n.style.backgroundColor = '';
+                   });
+                });
             });
+            
+            // Add custom scrollbar style for history dynamically
+            const style = document.createElement('style');
+            style.textContent = `
+                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272A; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent-signal); }
+            `;
+            document.head.appendChild(style);
         });
     </script>
 </body>

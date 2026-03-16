@@ -30,7 +30,7 @@ export async function loadRewardsData() {
       const levelElement = document.getElementById('current-level');
       const bgLevelElement = document.getElementById('bg-level-display');
 
-      if (levelElement) levelElement.textContent = `Lvl ${levelNum}`;
+      if (levelElement) levelElement.textContent = `Lvl ${levelNum} - ${getLevelName(levelNum)}`;
       if (bgLevelElement) bgLevelElement.textContent = levelNum < 10 ? `0${levelNum}` : levelNum;
 
       // Update progress bar
@@ -88,16 +88,25 @@ function updateLevelProgress(points, currentLevel) {
 
 // Helper to get total XP required for a specific level
 export function getThresholdForLevel(level) {
-  const baseThresholds = [0, 10, 60, 160, 360]; // L1, L2, L3, L4, L5
-  if (level <= 5) return baseThresholds[level - 1] || 0;
+  const baseThresholds = [0, 50, 150, 350, 600, 1000, 1500]; // L1-L7
+  // Cap at level 7
+  const cappedLevel = Math.min(Math.max(level, 1), 7);
+  return baseThresholds[cappedLevel - 1];
+}
 
-  let threshold = 360;
-  let increment = 200;
-  for (let i = 6; i <= level; i++) {
-    increment += 100;
-    threshold += increment;
-  }
-  return threshold;
+// Helper to get level name
+export function getLevelName(level) {
+  const names = [
+    'Beginner',
+    'Newbie',
+    'Emerge',
+    'Enthusiast',
+    'Advance',
+    'Absolute',
+    'Experienced'
+  ];
+  const cappedLevel = Math.min(Math.max(level, 1), names.length);
+  return names[cappedLevel - 1];
 }
 
 // Calculate avatar level based on points

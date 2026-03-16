@@ -123,26 +123,28 @@ export async function loadUserFeedback() {
 
     data.forEach((feedback) => {
       const feedbackItem = document.createElement('div');
-      feedbackItem.className = 'bg-tertiary rounded-lg p-4 border border-primary/50 mb-4';
+      feedbackItem.className = 'bg-obsidian border border-raw p-4 mb-4 relative hover:border-white/20 transition-colors';
 
       const submittedDate = new Date(feedback.created_at).toLocaleDateString();
-      const statusColor = feedback.status === 'addressed' ? 'text-green-400' :
-        feedback.status === 'reviewed' ? 'text-blue-400' : 'text-yellow-400';
+      const statusColor = feedback.status === 'addressed' ? 'text-green-500' :
+        feedback.status === 'reviewed' ? 'text-blue-500' : 'text-accent-signal';
 
       feedbackItem.innerHTML = `
-        <div class="flex justify-between items-start mb-2">
-          <h4 class="font-bold text-primary">${feedback.subject}</h4>
-          <span class="text-xs ${statusColor} capitalize">${feedback.status}</span>
+        <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#27272A] group-hover:bg-accent-signal transition-colors"></div>
+        <div class="flex justify-between items-start mb-3 ml-2">
+          <h4 class="font-bold text-primary text-sm font-mono truncate max-w-[200px]">${feedback.subject}</h4>
+          <span class="text-[10px] font-mono border border-raw px-1 py-0.5 ${statusColor} uppercase tracking-wider">${feedback.status}</span>
         </div>
-        <p class="text-sm text-secondary mb-2">${feedback.message.substring(0, 100)}${feedback.message.length > 100 ? '...' : ''}</p>
-        <div class="flex justify-between items-center text-xs text-secondary">
-          <span>${feedback.feedback_type}</span>
-          <span>${submittedDate}</span>
+        <p class="text-xs font-mono text-secondary mb-3 ml-2">${feedback.message.substring(0, 100)}${feedback.message.length > 100 ? '...' : ''}</p>
+        <div class="flex justify-between items-center text-[10px] text-muted font-mono ml-2 border-t border-raw pt-2">
+          <span>TX: ${feedback.feedback_type}</span>
+          <span>TS: ${submittedDate}</span>
         </div>
         ${feedback.admin_response ? `
-          <div class="mt-3 p-3 bg-primary/50 rounded border-l-4 border-accent">
-            <p class="text-sm text-accent font-medium">Admin Response:</p>
-            <p class="text-sm text-secondary">${feedback.admin_response}</p>
+          <div class="mt-3 ml-2 p-2 bg-graphite border-l-2 border-green-500/50 relative overflow-hidden">
+            <div class="absolute inset-0 bg-green-500/5 pointer-events-none"></div>
+            <p class="text-[10px] text-green-500 font-mono mb-1">SYS_RESPONSE:</p>
+            <p class="text-xs text-primary font-mono">${feedback.admin_response}</p>
           </div>
         ` : ''}
       `;
@@ -155,17 +157,32 @@ export async function loadUserFeedback() {
   }
 }
 
-// Show notification
+// Show notification matching Obsidian Stream theme
 function showNotification(message, type) {
   const notification = document.createElement('div');
-  notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${type === 'success' ? 'bg-green-500' :
-    type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-    } text-white`;
-  notification.textContent = message;
+  const isError = type === 'error';
+  
+  notification.className = `fixed top-10 right-10 p-4 border border-raw z-[100] text-primary animate-fade-in flex items-center gap-3 backdrop-blur-md shadow-accent-lg bg-obsidian`;
+  
+  // Custom styling elements based on type
+  if (isError) {
+      notification.classList.add('border-red-500');
+  }
+
+  const icon = document.createElement('span');
+  icon.className = `material-symbols-outlined ${isError ? 'text-red-500' : 'text-accent-signal'}`;
+  icon.textContent = isError ? 'error' : 'check_circle';
+  
+  const text = document.createElement('span');
+  text.className = 'font-space-grotesk tracking-wide text-sm';
+  text.textContent = message;
+
+  notification.appendChild(icon);
+  notification.appendChild(text);
 
   document.body.appendChild(notification);
 
   setTimeout(() => {
     notification.remove();
-  }, 3000);
+  }, 4000);
 }

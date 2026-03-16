@@ -1,4 +1,4 @@
-import { supabase } from './supabase.js';
+import { supabase } from '/js/supabase.js';
 
 async function loadProfile() {
   const { data: { session } } = await supabase.auth.getSession();
@@ -22,7 +22,14 @@ async function loadProfile() {
       document.getElementById('firstName').value = profile.first_name || '';
       document.getElementById('lastName').value = profile.last_name || '';
       document.getElementById('age').value = profile.age || '';
-      document.getElementById('classGrade').value = profile.class_grade || '';
+      
+      // Normalize classGrade
+      let cGrade = profile.class_grade || '';
+      if (cGrade && cGrade.endsWith('th')) {
+          cGrade = `Class ${cGrade.replace('th', '')}`;
+      }
+      document.getElementById('classGrade').value = cGrade;
+      
       document.getElementById('role').value = profile.role || 'Student';
       document.getElementById('photoUrl').value = profile.photo_url || '';
 
@@ -181,7 +188,5 @@ window.openUploadWidget = openUploadWidget;
 supabase.auth.onAuthStateChange((event, session) => {
   if (session) {
     loadProfile();
-  } else if (event === 'SIGNED_OUT') {
-    window.location.href = 'auth.html';
   }
 });

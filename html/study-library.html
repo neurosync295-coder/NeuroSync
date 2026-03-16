@@ -101,23 +101,14 @@
     <script type="module">
         import { supabase } from '/js/supabase.js';
 
-        // Check authentication
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (!session && event !== 'INITIAL_SESSION') {
-                window.location.href = 'auth.html';
-            } else if (session) {
-                // Initialize study library
+        // Initialize study library once session is confirmed
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
                 import('/js/study-library.js').then(module => {
                     module.initStudyLibrary();
                 });
             }
         });
-
-        // Initial check
-        (async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) window.location.href = '/html/auth.html';
-        })();
     </script>
 </head>
 

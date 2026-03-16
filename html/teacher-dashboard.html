@@ -17,13 +17,14 @@
     <script src="/js/sidemenu.js"></script>
     <script src="/js/theme.js"></script>
     <script src="/js/navbar-component.js"></script>
+    <script type="module" src="/js/auth-guard.js"></script>
     <!-- Supabase Integration -->
     <script type="module">
         import { supabase } from '/js/supabase.js';
 
         let userProfile = null;
 
-        // Check authentication and role
+        // Check role after guard handles basic auth
         supabase.auth.onAuthStateChange(async (event, session) => {
             const user = session?.user;
             if (user) {
@@ -32,12 +33,10 @@
                     await loadPendingMaterials();
                     await loadApprovedMaterials();
                     await loadTeacherStats();
-                } else {
+                } else if (userProfile) {
                     showNotification('Access denied. Teacher role required.', 'error');
                     setTimeout(() => window.location.href = 'dashboard.html', 2000);
                 }
-            } else {
-                window.location.href = '/html/auth.html';
             }
         });
 
@@ -52,15 +51,9 @@
                 if (error) throw error;
                 userProfile = data;
 
-                // Update navbar name
-                const displayName = userProfile.first_name && userProfile.last_name
-                    ? `${userProfile.first_name} ${userProfile.last_name}`
-                    : user.email.split('@')[0] || 'User';
-
-                const navName = document.getElementById('navbar-name');
+                // Update welcome message
                 const welcomeMsg = document.getElementById('welcome-message');
-                if (navName) navName.textContent = displayName;
-                if (welcomeMsg) welcomeMsg.textContent = `Welcome, ${userProfile.first_name || displayName.split(' ')[0]}!`;
+                if (welcomeMsg) welcomeMsg.textContent = `Welcome, ${userProfile.first_name || (user.email.split('@')[0] || 'Teacher')}!`;
 
             } catch (error) {
                 console.error('Error loading profile:', error);
@@ -304,10 +297,7 @@
             setTimeout(() => notification.remove(), 3000);
         }
 
-        window.signOut = async () => {
-            await supabase.auth.signOut();
-            window.location.href = '../index.html';
-        };
+// Sign out handled by sidemenu.js
 
         // Expose to global for HTML onclicks
         window.loadPendingMaterials = loadPendingMaterials;

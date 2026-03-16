@@ -17,13 +17,62 @@
     <!-- Supabase Integration -->
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/mobile-optimizations.css">
+    <style>
+        .dashboard-tab {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-width: 1px;
+            cursor: pointer;
+        }
+        .dashboard-tab.active-tab {
+            background: rgba(249, 115, 22, 0.05) !important;
+            border-color: var(--accent-signal) !important;
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.1);
+        }
+        .tab-content {
+            transition: all 0.5s ease;
+        }
+        .tab-content.hidden {
+            display: none !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
     <script src="/js/sidemenu.js"></script>
     <script src="/js/theme.js"></script>
     <script src="/js/navbar-component.js"></script>
+    <script type="module" src="/js/auth-guard.js"></script>
     <script type="module">
         import { supabase } from '/js/supabase.js';
         import { initFocusTimer } from '/js/focus.js';
         import { getThresholdForLevel } from '/js/rewards.js';
+
+        // ============ TAB SYSTEM ============
+        window.switchTab = function(tabId) {
+            console.log('Switching to tab:', tabId);
+            // Update Tab Cards
+            document.querySelectorAll('.dashboard-tab').forEach(tab => {
+                tab.classList.remove('active-tab');
+                tab.classList.replace('border-accent', 'border-primary');
+            });
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            if (activeTab) {
+                activeTab.classList.add('active-tab');
+                activeTab.classList.replace('border-primary', 'border-accent');
+            }
+
+            // Update Content Sections
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.style.opacity = '0';
+            });
+            const activeContent = document.getElementById(`content-${tabId}`);
+            if (activeContent) {
+                activeContent.classList.remove('hidden');
+                setTimeout(() => {
+                    activeContent.style.opacity = '1';
+                }, 50);
+            }
+        };
 
         let userProfile = null;
 
@@ -40,17 +89,21 @@
                 await loadDashboardData(user.id);
                 checkProfileCompletion();
 
+                // Telemetry Simulation
+                if (!window.telemetryInterval) {
+                    window.telemetryInterval = setInterval(() => {
+                        const latencyEl = document.getElementById('latency-display');
+                        if (latencyEl && Math.random() > 0.8) {
+                            latencyEl.textContent = `${Math.floor(Math.random() * 8 + 10)}ms`;
+                        }
+                    }, 2000);
+                }
+
                 // Initialize modules
                 if (!window.focusTimerInitialized) {
                     initFocusTimer();
                     window.focusTimerInitialized = true;
                 }
-            } else if (event === 'SIGNED_OUT') {
-                window.location.href = 'auth.html';
-            } else {
-                // Initial check
-                const { data: { session: currentSession } } = await supabase.auth.getSession();
-                if (!currentSession) window.location.href = '/html/auth.html';
             }
         });
 
@@ -65,52 +118,6 @@
                 if (error && error.code !== 'PGRST116') throw error;
                 userProfile = profile || {};
                 console.log('User profile data:', userProfile);
-
-                // Show navbar profile section
-                const navbarProfile = document.getElementById('navbar-profile');
-                if (navbarProfile) navbarProfile.style.display = 'flex';
-
-                // Update side menu profile photo
-                const sidePhotoDiv = document.getElementById('side-profile-photo');
-                if (sidePhotoDiv) {
-                    if (userProfile.photo_url) {
-                        sidePhotoDiv.style.backgroundImage = `url("${userProfile.photo_url}")`;
-                        sidePhotoDiv.innerHTML = '';
-                    } else {
-                        sidePhotoDiv.style.backgroundImage = 'none';
-                        sidePhotoDiv.innerHTML = '<span class="material-symbols-outlined text-xl text-[var(--primary-color)] flex items-center justify-center w-full h-full">person</span>';
-                    }
-                }
-
-                // Update navbar profile photo
-                const navbarPhotoDiv = document.getElementById('navbar-profile-photo');
-                if (navbarPhotoDiv) {
-                    if (userProfile.photo_url) {
-                        navbarPhotoDiv.style.backgroundImage = `url("${userProfile.photo_url}")`;
-                        navbarPhotoDiv.innerHTML = '';
-                    } else {
-                        navbarPhotoDiv.style.backgroundImage = 'none';
-                        navbarPhotoDiv.innerHTML = '<span class="material-symbols-outlined text-xl text-[var(--primary-color)] flex items-center justify-center w-full h-full">person</span>';
-                    }
-                }
-
-                // Update side menu name
-                const displayName = `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim() || user.email.split('@')[0] || '';
-                const sideName = document.getElementById('side-name');
-                if (sideName) sideName.textContent = displayName || 'User';
-
-                // Update navbar name
-                const navbarName = document.getElementById('navbar-name');
-                if (navbarName) navbarName.textContent = displayName || 'User';
-
-                // Update side menu class
-                const userClass = userProfile.class_grade || 'Student';
-                const sideClass = document.getElementById('side-class-role');
-                if (sideClass) sideClass.textContent = userClass;
-
-                // Update navbar class
-                const navbarClass = document.getElementById('navbar-class-role');
-                if (navbarClass) navbarClass.textContent = userClass;
 
                 // Show teacher dashboard link for teachers
                 if (userProfile.role === 'Teacher') {
@@ -159,7 +166,10 @@
                     const progressBar = document.getElementById('level-progress');
 
                     if (pointsElement) pointsElement.textContent = rewards.total_points || 0;
-                    if (levelElement) levelElement.textContent = `Lvl ${rewards.avatar_level || 1}`;
+                    if (levelElement) {
+                        const lvl = rewards.avatar_level || 1;
+                        levelElement.textContent = `Lvl ${lvl} - ${getLevelName(lvl)}`;
+                    }
 
                     const currentLevel = rewards.avatar_level || 1;
                     const currentPoints = rewards.total_points || 0;
@@ -183,8 +193,9 @@
             try {
                 const { data: sessions, error } = await supabase
                     .from('focus_sessions')
-                    .select('duration_minutes, timestamp')
-                    .eq('user_id', userId);
+                    .select('duration_minutes, timestamp, task_name')
+                    .eq('user_id', userId)
+                    .order('timestamp', { ascending: false });
 
                 if (error) throw error;
 
@@ -195,6 +206,7 @@
                 const todaySessions = sessions.filter(s => new Date(s.timestamp).toDateString() === today);
                 const todayMinutes = todaySessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
 
+                // Update Stats Summary
                 const totalSessionsEl = document.getElementById('total-sessions');
                 const totalMinutesEl = document.getElementById('total-minutes');
                 const todaySessionsEl = document.getElementById('today-sessions');
@@ -204,6 +216,57 @@
                 if (totalMinutesEl) totalMinutesEl.textContent = totalMinutes;
                 if (todaySessionsEl) todaySessionsEl.textContent = todaySessions.length;
                 if (todayMinutesEl) todayMinutesEl.textContent = todayMinutes;
+
+                // Update Focus History Tab (Last 10 sessions)
+                const historyContainer = document.getElementById('detailed-focus-logs');
+                if (historyContainer) {
+                    historyContainer.innerHTML = '';
+                    sessions.slice(0, 10).forEach(s => {
+                        const date = new Date(s.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center justify-between p-4 bg-[var(--bg-graphite)] border border-[var(--border-primary)] group hover:border-accent transition-all duration-300';
+                        div.innerHTML = `
+                            <div class="flex items-center gap-4">
+                                <div class="w-8 h-8 flex items-center justify-center bg-accent/5 text-accent">
+                                    <span class="material-symbols-outlined text-sm">timer</span>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-primary uppercase tracking-widest">${s.task_name || 'Focus Session'}</div>
+                                    <div class="text-[8px] text-secondary font-mono">${date} // DUR_${s.duration_minutes}M</div>
+                                </div>
+                            </div>
+                            <div class="text-[10px] font-black text-accent">+${Math.floor(s.duration_minutes / 2)}XP</div>
+                        `;
+                        historyContainer.appendChild(div);
+                    });
+                }
+
+                // Update Daily Cycle Tab
+                const dailyGoal = 120; // Minutes
+                const completionPct = Math.min((todayMinutes / dailyGoal) * 100, 100);
+                const pctEl = document.getElementById('daily-completion-pct');
+                if (pctEl) pctEl.textContent = `${Math.round(completionPct)}%`;
+
+                const timelineContainer = document.getElementById('today-timeline');
+                if (timelineContainer) {
+                    timelineContainer.innerHTML = '';
+                    if (todaySessions.length === 0) {
+                        timelineContainer.innerHTML = '<p class="text-xs text-secondary italic opacity-50">No synchronization events recorded today.</p>';
+                    } else {
+                        todaySessions.forEach(s => {
+                            const time = new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const div = document.createElement('div');
+                            div.className = 'relative pl-4';
+                            div.innerHTML = `
+                                <div class="absolute left-[-5px] top-1.5 w-2 h-2 rounded-full bg-accent shadow-[0_0_5px_var(--accent-signal)]"></div>
+                                <div class="text-[10px] text-accent font-mono mb-1">${time}</div>
+                                <div class="text-[10px] font-bold text-primary uppercase tracking-widest">${s.task_name || 'Session Started'}</div>
+                                <div class="text-[8px] text-secondary">Duration: ${s.duration_minutes} minutes</div>
+                            `;
+                            timelineContainer.appendChild(div);
+                        });
+                    }
+                }
 
             } catch (error) {
                 console.error('Error loading focus stats:', error);
@@ -227,22 +290,91 @@
                     moods.slice(0, 5).forEach(m => {
                         const date = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         const div = document.createElement('div');
-                        div.className = 'flex items-center justify-between p-3 bg-primary/20 rounded-lg border border-primary/30';
+                        div.className = 'flex items-center justify-between p-4 bg-[var(--bg-graphite)] border border-[var(--border-primary)] group hover:border-accent transition-all duration-300';
                         div.innerHTML = `
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">${getMoodEmoji(m.mood)}</span>
-                                <span class="text-sm font-medium text-primary">${m.mood}</span>
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 flex items-center justify-center bg-primary/5 text-2xl">${getMoodEmoji(m.mood)}</div>
+                                <div>
+                                    <div class="text-xs font-bold text-primary uppercase tracking-widest">${m.mood}</div>
+                                    <div class="text-[10px] text-secondary font-mono">${date} // LNK_STABLE</div>
+                                </div>
                             </div>
-                            <span class="text-xs text-secondary">${date}</span>
                         `;
                         recentMoodsContainer.appendChild(div);
                     });
                 }
 
-                // Update average mood (simplistic)
+                // Update average mood card
                 const avgMoodEl = document.getElementById('avg-mood');
                 if (avgMoodEl && moods.length > 0) {
                     avgMoodEl.textContent = getMoodEmoji(moods[0].mood);
+                }
+
+                // Add Mood Stability Score to Biometric Log Header
+                const moodLabel = document.querySelector('#recent-moods')?.parentElement?.querySelector('.telemetry-label');
+                if (moodLabel && moods.length > 0) {
+                    const focusCount = moods.filter(m => ['Focused', 'Calm', 'Happy'].includes(m.mood)).length;
+                    const stability = Math.round((focusCount / moods.length) * 100);
+                    moodLabel.innerHTML = `Biometric_Log // Stability: <span class="text-accent">${stability}%</span>`;
+                } else if (moodLabel) {
+                    moodLabel.innerHTML = `Biometric_Log // Status: <span class="text-secondary">Waiting_for_Data</span>`;
+                }
+
+                if (!moods || moods.length === 0) {
+                    const recentMoodsContainer = document.getElementById('recent-moods');
+                    if (recentMoodsContainer) {
+                        recentMoodsContainer.innerHTML = `
+                            <div class="p-8 text-center border border-dashed border-primary/20 bg-primary/5 rounded-lg">
+                                <span class="material-symbols-outlined text-4xl text-secondary mb-4 opacity-20">biotech</span>
+                                <p class="text-xs text-secondary italic mb-4">No biometric data recorded in current sector.</p>
+                                <button onclick="window.location.href='mood-selection.html'" class="obsidian-button mx-auto text-[10px]">INITIALIZE_LOG</button>
+                            </div>
+                        `;
+                    }
+                }
+
+                // Biometric Tab Update: Mood Distribution
+                if (moods.length > 0) {
+                    const distribution = {};
+                    moods.forEach(m => {
+                        distribution[m.mood] = (distribution[m.mood] || 0) + 1;
+                    });
+
+                    const sortedMoods = Object.entries(distribution)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 3);
+
+                    const moodDistContainer = document.querySelector('#content-biometric-avg .space-y-3');
+                    if (moodDistContainer) {
+                        moodDistContainer.innerHTML = '';
+                        sortedMoods.forEach(([mood, count]) => {
+                            const pct = Math.round((count / moods.length) * 100);
+                            const div = document.createElement('div');
+                            div.innerHTML = `
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span>${mood}</span>
+                                    <span class="text-primary font-bold">${pct}%</span>
+                                </div>
+                                <div class="h-1 bg-primary/10 w-full mb-3"><div class="h-full bg-accent" style="width: ${pct}%"></div></div>
+                            `;
+                            moodDistContainer.appendChild(div);
+                        });
+                    }
+
+                    // AI Reasoning Logic
+                    const insightEl = document.querySelector('#mood-insights-container p');
+                    if (insightEl) {
+                        const topMood = sortedMoods[0][0];
+                        let insight = "Monitoring neural resonance patterns...";
+                        if (topMood === 'Focused' || topMood === 'Happy' || topMood === 'Excited') {
+                            insight = "System detecting high cognitive coherence. Recent session data indicates peak synchronization in current biometric window.";
+                        } else if (topMood === 'Tired' || topMood === 'Stressed' || topMood === 'Anxious') {
+                            insight = "Sync-drift detected. Biometric logs suggest scheduled cooldowns to optimize long-term cognitive stability.";
+                        } else {
+                            insight = "Neural balance maintained. Consistency in recent logs suggests a stable baseline for deep work sessions.";
+                        }
+                        insightEl.textContent = insight;
+                    }
                 }
 
             } catch (error) {
@@ -253,8 +385,19 @@
         async function loadRecentActivity(userId) {
             try {
                 // Combine recent moods and focus sessions as "activity"
-                const { data: moods } = await supabase.from('moods').select('*').eq('user_id', userId).order('timestamp', { ascending: false }).limit(5);
-                const { data: focus } = await supabase.from('focus_sessions').select('*').eq('user_id', userId).order('timestamp', { ascending: false }).limit(5);
+                const { data: moods } = await supabase.from('moods').select('*').eq('user_id', userId).order('timestamp', { ascending: false }).limit(10);
+                const { data: focus } = await supabase.from('focus_sessions').select('*').eq('user_id', userId).order('timestamp', { ascending: false }).limit(10);
+
+                // Calculate Daily Streak (Simplistic)
+                const activityDates = new Set([
+                    ...(moods || []).map(m => new Date(m.timestamp).toDateString()),
+                    ...(focus || []).map(f => new Date(f.timestamp).toDateString())
+                ]);
+                
+                const historyLabel = document.querySelector('#recent-activity')?.parentElement?.querySelector('.telemetry-label');
+                if (historyLabel) {
+                    historyLabel.innerHTML = `Synchronization_History // Streak: <span class="text-accent">${activityDates.size} Days</span>`;
+                }
 
                 const activities = [
                     ...(moods || []).map(m => ({ type: 'mood', text: `Feeling ${m.mood}`, ts: m.timestamp, icon: 'mood' })),
@@ -264,15 +407,28 @@
                 const container = document.getElementById('recent-activity');
                 if (container) {
                     container.innerHTML = '';
+                    if (activities.length === 0) {
+                        container.innerHTML = `
+                            <div class="p-8 text-center border border-dashed border-primary/20 bg-primary/5 rounded-lg">
+                                <span class="material-symbols-outlined text-4xl text-secondary mb-4 opacity-20">history</span>
+                                <p class="text-xs text-secondary italic mb-4">No synchronization events recorded.</p>
+                                <button onclick="switchTab('focus-output')" class="obsidian-button mx-auto text-[10px]">START_ENGINE</button>
+                            </div>
+                        `;
+                        return;
+                    }
                     activities.forEach(act => {
                         const date = new Date(act.ts).toLocaleDateString();
+                        const time = new Date(act.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         const div = document.createElement('div');
-                        div.className = 'flex items-center gap-3 p-3 bg-primary/20 rounded-lg border border-primary/30';
+                        div.className = 'flex items-center gap-4 p-4 bg-[var(--bg-graphite)] border border-[var(--border-primary)] group hover:border-accent transition-all duration-300';
                         div.innerHTML = `
-                            <span class="material-symbols-outlined text-accent text-xl">${act.icon}</span>
+                            <div class="w-10 h-10 flex items-center justify-center bg-accent/5 text-accent">
+                                <span class="material-symbols-outlined text-xl">${act.icon}</span>
+                            </div>
                             <div class="flex-1">
-                                <p class="text-sm text-primary font-medium">${act.text}</p>
-                                <p class="text-[10px] text-secondary uppercase tracking-widest">${date}</p>
+                                <p class="text-[10px] font-bold text-primary uppercase tracking-widest leading-none mb-1">${act.text}</p>
+                                <p class="text-[10px] text-secondary font-mono">${date} // ${time} // SEC_SYNC</p>
                             </div>
                         `;
                         container.appendChild(div);
@@ -284,30 +440,65 @@
         }
 
         async function loadStudyMaterials(userId) {
-            // For now, list materials liked by the user
             try {
+                // First try to get liked materials
                 const { data: likes } = await supabase
                     .from('likes')
                     .select('post_id')
                     .eq('user_id', userId)
-                    .limit(5);
+                    .limit(4);
+
+                let displayItems = [];
+                let isFallback = false;
+
+                if (likes && likes.length > 0) {
+                    displayItems = likes.map(l => ({ id: l.post_id, title: l.post_id.split('-').pop(), type: 'SAVED' }));
+                } else {
+                    // Fallback to most popular approved materials for the user's class
+                    isFallback = true;
+                    let userClass = "Class 10";
+                    if (userProfile && userProfile.class_grade) {
+                        userClass = `Class ${userProfile.class_grade}`;
+                    }
+
+                    const { data: global } = await supabase
+                        .from('study_materials')
+                        .select('id, title, file_type')
+                        .eq('status', 'approved')
+                        .eq('class_level', userClass)
+                        .limit(4);
+                    
+                    if (global) {
+                        displayItems = global.map(g => ({ id: g.id, title: g.title, type: g.file_type || 'POST' }));
+                    }
+                }
 
                 const container = document.getElementById('recent-materials');
                 if (container) {
                     container.innerHTML = '';
-                    if (!likes || likes.length === 0) {
-                        container.innerHTML = '<p class="text-sm text-secondary text-center py-4">No synchronized materials found.</p>';
+                    
+                    const label = container.parentElement.querySelector('.telemetry-label');
+                    if (label) {
+                        label.innerHTML = isFallback ? `Neural_Assets // Popular_in_Class` : `Neural_Assets // Synchronized_Gems`;
+                    }
+
+                    if (displayItems.length === 0) {
+                        container.innerHTML = '<p class="col-span-full text-xs text-secondary italic opacity-50 p-4">Neural archive initializing... Check back shortly.</p>';
                         return;
                     }
-                    likes.forEach(like => {
+
+                    displayItems.forEach(item => {
                         const div = document.createElement('div');
-                        div.className = 'flex items-center justify-between p-3 bg-primary/20 rounded-lg border border-primary/30';
+                        div.className = 'flex items-center justify-between p-4 bg-[var(--bg-graphite)] border border-[var(--border-primary)] group hover:border-accent transition-all duration-300';
                         div.innerHTML = `
-                             <div class="flex items-center gap-3">
-                                 <span class="material-symbols-outlined text-accent">description</span>
-                                 <span class="text-sm font-medium text-primary">${like.post_id.split('-').pop()}</span>
+                             <div class="flex items-center gap-4">
+                                 <span class="material-symbols-outlined text-accent text-xl">${item.type === 'Video' ? 'movie' : 'description'}</span>
+                                 <div>
+                                     <div class="text-[10px] font-bold text-primary uppercase tracking-widest truncate max-w-[150px]">${item.title}</div>
+                                     <div class="text-[9px] text-secondary font-mono">${item.type} // 0x${Math.random().toString(16).slice(2, 6).toUpperCase()}</div>
+                                 </div>
                              </div>
-                             <button onclick="window.location.href='study-library.html'" class="text-xs text-accent underline">View</button>
+                             <button onclick="window.location.href='study-library.html'" class="obsidian-button !py-1 !px-4 text-[9px]">ACCESS</button>
                          `;
                         container.appendChild(div);
                     });
@@ -387,21 +578,29 @@
             }
         }
 
-        // Navbar sign out functionality
-        window.signOut = async () => {
-            try {
-                const { error } = await supabase.auth.signOut();
-                if (error) throw error;
-                window.location.href = '../index.html';
-            } catch (error) {
-                console.error('Sign out error:', error);
-            }
-        };
+// Navbar sign out functionality (Now handled by sidemenu.js)
+        /* 
+        window.signOut = async () => { 
+           ... 
+        }; 
+        */
     </script>
     <!-- Inheriting classes from global.css -->
 
-<body class="bg-primary dark">
-    <!-- Side Menu Container (Injected by sidemenu.js) -->
+<body class="bg-primary dark obsidian-stream-body">
+    <!-- Advanced Neural Particle Grid -->
+    <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+        <div class="particle"
+            style="--x-start:12vw;--y-start:18vh;--x-end:82vw;--y-end:78vh;width:2px;height:2px;animation-delay:0s;">
+        </div>
+        <div class="particle"
+            style="--x-start:75vw;--y-start:5vh;--x-end:12vw;--y-end:88vh;width:1px;height:1px;animation-delay:-5s;">
+        </div>
+        <div class="particle"
+            style="--x-start:8vw;--y-start:85vh;--x-end:90vw;--y-end:12vh;width:3px;height:3px;animation-delay:-10s;">
+        </div>
+    </div>
+
     <div id="side-menu-container"></div>
     <div id="universal-navbar-container"></div>
 
@@ -409,205 +608,322 @@
         Container (Injected via JS) -->
         <main class="flex-1 p-6 transition-all duration-300 w-full">
             <div class="max-w-7xl mx-auto">
-                <!-- Welcome Section -->
-                <div class="mb-8">
-                    <h1 class="text-3xl font-bold text-primary mb-2" id="welcome-message">Welcome back!</h1>
-                    <p class="text-secondary">Track your progress and stay focused on your goals.</p>
+                <!-- Welcome Section with Telemetry -->
+                <div class="mb-12 relative">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div>
+                            <div class="telemetry-label mb-2"><span class="signal-bar h-4"></span> Neural_Link_Status:
+                                <span class="telemetry-value">Synchronized</span>
+                            </div>
+                            <h1 class="text-4xl md:text-5xl font-black text-primary mb-2 tracking-tighter"
+                                id="welcome-message">Welcome back!</h1>
+                            <p class="text-secondary text-lg">Bio-metric sync optimized for peak cognitive performance.
+                            </p>
+                        </div>
+
+                        <!-- Header Telemetry Strip -->
+                        <div class="flex gap-8 pb-1">
+                            <div class="telemetry-label">
+                                Sector: <span class="telemetry-value" id="sector-display">Primary_Core</span>
+                            </div>
+                            <div class="telemetry-label">
+                                Latency: <span class="telemetry-value" id="latency-display">14ms</span>
+                                <div class="status-bar-wrap ml-2">
+                                    <div class="status-bar-active"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Stats Overview -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <!-- Focus Points -->
-                    <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
+                    <!-- Tab 1: Focus Output -->
+                    <div id="tab-focus-output" onclick="switchTab('focus-output')"
+                        class="bg-secondary/50 backdrop-blur-sm border border-accent p-6 relative group overflow-hidden cursor-pointer transition-all duration-300 hover:bg-secondary/70 dashboard-tab active-tab">
+                        <div
+                            class="absolute top-0 right-0 p-2 opacity-10 font-mono text-[8px] transform rotate-90 origin-top-right">
+                            TRM_01</div>
                         <div class="flex items-center justify-between mb-4">
                             <span class="material-symbols-outlined text-3xl text-accent">stars</span>
-                            <span class="text-2xl font-bold text-accent" id="focus-points">0</span>
+                            <span class="text-3xl font-black text-accent tracking-tighter" id="focus-points">0</span>
                         </div>
-                        <h3 class="text-lg font-bold text-primary mb-1">Focus Points</h3>
-                        <p class="text-sm text-secondary">Level <span id="avatar-level">1</span></p>
-                        <div class="mt-3 w-full bg-tertiary rounded-full h-2">
-                            <div class="bg-accent h-2 rounded-full transition-all duration-500" id="level-progress"
+                        <h3 class="text-xs font-bold text-secondary uppercase tracking-[0.3em] mb-1">Focus Output</h3>
+                        <p class="text-xs font-bold text-primary">Level <span id="avatar-level">1</span></p>
+                        <div class="mt-4 w-full bg-tertiary h-0.5 relative">
+                            <div class="bg-accent h-full transition-all duration-1000" id="level-progress"
                                 style="width: 0%"></div>
                         </div>
                     </div>
 
-                    <!-- Total Sessions -->
-                    <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
+                    <!-- Tab 2: Total Focus -->
+                    <div id="tab-total-focus" onclick="switchTab('total-focus')"
+                        class="bg-secondary/50 backdrop-blur-sm border border-primary p-6 relative group overflow-hidden cursor-pointer transition-all duration-300 hover:bg-secondary/70 dashboard-tab">
+                        <div
+                            class="absolute top-0 right-0 p-2 opacity-10 font-mono text-[8px] transform rotate-90 origin-top-right">
+                            TRM_02</div>
                         <div class="flex items-center justify-between mb-4">
                             <span class="material-symbols-outlined text-3xl text-accent">timer</span>
-                            <span class="text-2xl font-bold text-accent" id="total-sessions">0</span>
+                            <span class="text-3xl font-black text-accent tracking-tighter" id="total-sessions">0</span>
                         </div>
-                        <h3 class="text-lg font-bold text-primary mb-1">Focus Sessions</h3>
-                        <p class="text-sm text-secondary"><span id="total-minutes">0</span> minutes total</p>
+                        <h3 class="text-xs font-bold text-secondary uppercase tracking-[0.3em] mb-1">Total_Focus</h3>
+                        <p class="text-xs font-bold text-primary"><span id="total-minutes">0</span> minutes synchronized
+                        </p>
                     </div>
 
-                    <!-- Today's Progress -->
-                    <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
+                    <!-- Tab 3: Current Cycle -->
+                    <div id="tab-current-cycle" onclick="switchTab('current-cycle')"
+                        class="bg-secondary/50 backdrop-blur-sm border border-primary p-6 relative group overflow-hidden cursor-pointer transition-all duration-300 hover:bg-secondary/70 dashboard-tab">
+                        <div
+                            class="absolute top-0 right-0 p-2 opacity-10 font-mono text-[8px] transform rotate-90 origin-top-right">
+                            TRM_03</div>
                         <div class="flex items-center justify-between mb-4">
                             <span class="material-symbols-outlined text-3xl text-accent">today</span>
-                            <span class="text-2xl font-bold text-accent" id="today-sessions">0</span>
+                            <span class="text-3xl font-black text-accent tracking-tighter" id="today-sessions">0</span>
                         </div>
-                        <h3 class="text-lg font-bold text-primary mb-1">Today's Sessions</h3>
-                        <p class="text-sm text-secondary"><span id="today-minutes">0</span> minutes today</p>
+                        <h3 class="text-xs font-bold text-secondary uppercase tracking-[0.3em] mb-1">Current_Cycle</h3>
+                        <p class="text-xs font-bold text-primary"><span id="today-minutes">0</span> min in sector</p>
                     </div>
 
-                    <!-- Mood Average -->
-                    <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
+                    <!-- Tab 4: Biometric Avg -->
+                    <div id="tab-biometric-avg" onclick="switchTab('biometric-avg')"
+                        class="bg-secondary/50 backdrop-blur-sm border border-primary p-6 relative group overflow-hidden cursor-pointer transition-all duration-300 hover:bg-secondary/70 dashboard-tab">
+                        <div
+                            class="absolute top-0 right-0 p-2 opacity-10 font-mono text-[8px] transform rotate-90 origin-top-right">
+                            TRM_04</div>
                         <div class="flex items-center justify-between mb-4">
                             <span class="material-symbols-outlined text-3xl text-accent">mood</span>
-                            <span class="text-2xl font-bold text-accent" id="avg-mood">0</span>
+                            <span class="text-3xl font-black text-accent tracking-tighter" id="avg-mood">0</span>
                         </div>
-                        <h3 class="text-lg font-bold text-primary mb-1">Mood Average</h3>
-                        <p class="text-sm text-secondary" id="mood-trend">→ Stable</p>
+                        <h3 class="text-xs font-bold text-secondary uppercase tracking-[0.3em] mb-1">Biometric_Avg</h3>
+                        <p class="text-xs font-bold text-primary" id="mood-trend">→ Stable_State</p>
                     </div>
                 </div>
 
                 <!-- Main Content Grid -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Focus Timer -->
-                    <div class="lg:col-span-2 bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
-                        <h2 class="text-2xl font-bold text-primary mb-6">Focus Timer</h2>
-                        <div class="text-center">
-                            <div class="mb-6">
-                                <div class="w-32 h-32 mx-auto bg-center bg-no-repeat aspect-square bg-cover rounded-full border-2 border-accent"
-                                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDfd-joboe9xIoKtUc4hl2jVktQM-V1N3YX8OgXrfPUxZiBgt74XR5WtJfBxsdBl7av2tJbosZROY157DNMjwOJ3UPSiLPVk4Z2IzmHDcxGM8NjxnoIqz_FpuTSDFkMtVHc8_x9izwetsNYUiEg-t7mwPBTg_v2lp5HDySnPsB71LzS-kg8aihsn0g3tnZ26Smwv6ctsVLs05kme6ecPIAEPguvRiEvNQSeKSF9Utp5vZvfnvGbs_4bQGZUUn12N-bOvBRtIXFxEDk");'>
+                    <!-- Tab Content 1: Focus Engine (Active by default) -->
+                    <div id="content-focus-output" class="tab-content lg:col-span-2 reveal-on-scroll">
+                        <div class="bg-secondary/50 backdrop-blur-sm border border-primary p-8 relative overflow-hidden group min-h-[400px]">
+                            <div class="telemetry-label mb-8"><span class="signal-bar"></span> Core_Focus_Engine // ACT_01</div>
+                            <div class="flex flex-col md:flex-row items-center justify-between gap-12">
+                                <div class="relative w-48 h-48 flex items-center justify-center">
+                                    <div class="absolute inset-0 border-4 border-[var(--bg-graphite)] rounded-none"></div>
+                                    <div id="timer-display" class="text-5xl font-black text-primary tracking-tighter relative z-10">25:00</div>
+                                    <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 px-2 bg-accent text-[8px] font-bold uppercase tracking-widest text-[#000]">Engine_Stable</div>
                                 </div>
-                            </div>
-                            <p id="timer-display" class="text-4xl font-mono text-secondary tracking-widest mb-6">25:00
-                            </p>
-                            <div class="flex gap-2 mb-4 justify-center">
-                                <button id="time-15" class="translucent-button px-3 py-1 text-sm rounded-full">15
-                                    min</button>
-                                <button id="time-25"
-                                    class="translucent-button px-3 py-1 text-sm rounded-full bg-accent text-primary">25
-                                    min</button>
-                                <button id="time-30" class="translucent-button px-3 py-1 text-sm rounded-full">30
-                                    min</button>
-                                <button id="time-45" class="translucent-button px-3 py-1 text-sm rounded-full">45
-                                    min</button>
-                            </div>
-                            <div class="flex gap-2 justify-center">
-                                <button id="start-btn"
-                                    class="translucent-button flex shrink-0 items-center justify-center rounded-full size-16 hover:scale-110 transition-transform duration-200 shadow-lg shadow-accent/30">
-                                    <span class="material-symbols-outlined text-4xl">play_arrow</span>
-                                </button>
-                                <button id="pause-btn"
-                                    class="translucent-button flex shrink-0 items-center justify-center rounded-full size-16 hover:scale-110 transition-transform duration-200 shadow-lg shadow-accent/30"
-                                    style="display: none;">
-                                    <span class="material-symbols-outlined text-4xl">pause</span>
-                                </button>
-                                <button id="reset-btn"
-                                    class="translucent-button flex shrink-0 items-center justify-center rounded-full size-16 hover:scale-110 transition-transform duration-200 shadow-lg shadow-accent/30">
-                                    <span class="material-symbols-outlined text-4xl">replay</span>
-                                </button>
-                            </div>
-                            <div class="mt-6">
-                                <div class="flex justify-between mb-1 items-center">
-                                    <span class="text-base font-medium text-primary">Focus Level</span>
-                                    <span id="progress-text"
-                                        class="text-sm font-bold text-accent px-2 py-1 rounded-full bg-accent/20">0%</span>
-                                </div>
-                                <div class="w-full bg-tertiary rounded-full h-3 overflow-hidden">
-                                    <div id="progress-bar"
-                                        class="bg-accent h-3 rounded-full transition-all duration-500 ease-in-out shadow-lg shadow-accent/50"
-                                        style="width: 0%"></div>
+
+                                <div class="flex-1 w-full space-y-8">
+                                    <div class="flex flex-wrap gap-2">
+                                        <button id="time-15" class="obsidian-button text-[10px] py-2 px-6">15m</button>
+                                        <button id="time-25" class="obsidian-button text-[10px] py-2 px-6 border-accent">25m</button>
+                                        <button id="time-30" class="obsidian-button text-[10px] py-2 px-6">30m</button>
+                                        <button id="time-45" class="obsidian-button text-[10px] py-2 px-6">45m</button>
+                                    </div>
+
+                                    <div class="flex gap-4">
+                                        <button id="start-btn" class="obsidian-button p-4">
+                                            <span class="material-symbols-outlined">play_arrow</span>
+                                        </button>
+                                        <button id="pause-btn" class="obsidian-button p-4" style="display: none;">
+                                            <span class="material-symbols-outlined">pause</span>
+                                        </button>
+                                        <button id="reset-btn" class="obsidian-button p-4 border-none opacity-50 hover:opacity-100">
+                                            <span class="material-symbols-outlined">replay</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="w-full">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="telemetry-label">Sync_Progress</span>
+                                            <span id="progress-text" class="text-xs font-bold text-accent">0%</span>
+                                        </div>
+                                        <div class="h-1 w-full bg-primary/10 relative">
+                                            <div id="progress-bar" class="absolute left-0 top-0 h-full bg-accent transition-all duration-500 shadow-[0_0_10px_rgba(249,115,22,0.3)]" style="width: 0%"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Quick Actions -->
+                    <!-- Tab Content 2: Focus History (Hidden) -->
+                    <div id="content-total-focus" class="tab-content hidden lg:col-span-2 reveal-on-scroll">
+                        <div class="bg-secondary/50 backdrop-blur-sm border border-primary p-8 relative overflow-hidden group min-h-[400px]">
+                            <div class="telemetry-label mb-8"><span class="signal-bar"></span> Synchronization_Archive // DATA_Y</div>
+                            <div class="space-y-6">
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div class="p-4 bg-[var(--bg-graphite)] border border-[var(--border-primary)]">
+                                        <div class="text-[8px] text-secondary uppercase tracking-widest mb-1">Efficiency</div>
+                                        <div class="text-xl font-black text-primary">94.2%</div>
+                                    </div>
+                                    <div class="p-4 bg-[var(--bg-graphite)] border border-[var(--border-primary)]">
+                                        <div class="text-[8px] text-secondary uppercase tracking-widest mb-1">Deep_Work</div>
+                                        <div class="text-xl font-black text-primary">12h</div>
+                                    </div>
+                                    <div class="p-4 bg-[var(--bg-graphite)] border border-[var(--border-primary)]">
+                                        <div class="text-[8px] text-secondary uppercase tracking-widest mb-1">Consistency</div>
+                                        <div class="text-xl font-black text-primary">A+</div>
+                                    </div>
+                                    <div class="p-4 bg-[var(--bg-graphite)] border border-[var(--border-primary)]">
+                                        <div class="text-[8px] text-secondary uppercase tracking-widest mb-1">Uptime</div>
+                                        <div class="text-xl font-black text-primary">98%</div>
+                                    </div>
+                                </div>
+                                <div id="detailed-focus-logs" class="space-y-4">
+                                    <p class="text-xs text-secondary italic opacity-50 px-4">Initializing historical data stream...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Content 3: Current Cycle (Hidden) -->
+                    <div id="content-current-cycle" class="tab-content hidden lg:col-span-2 reveal-on-scroll">
+                        <div class="bg-secondary/50 backdrop-blur-sm border border-primary p-8 relative overflow-hidden group min-h-[400px]">
+                            <div class="telemetry-label mb-8"><span class="signal-bar"></span> Current_Cycle_Log // SEC_DAILY</div>
+                            <div class="space-y-6">
+                                <div class="flex items-center justify-between p-6 bg-accent/5 border border-accent/20">
+                                    <div>
+                                        <div class="text-xs font-bold text-accent uppercase tracking-widest mb-1">Daily Goal</div>
+                                        <div class="text-2xl font-black text-primary">120 Minutes</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-[8px] text-secondary uppercase tracking-widest">Completed</div>
+                                        <div class="text-2xl font-black text-accent" id="daily-completion-pct">0%</div>
+                                    </div>
+                                </div>
+                                <div id="today-timeline" class="relative pl-6 border-l border-primary/20 space-y-8">
+                                    <!-- Timeline items -->
+                                    <p class="text-xs text-secondary italic opacity-50">Monitoring current synchronization window...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Content 4: Biometric Avg (Hidden) -->
+                    <div id="content-biometric-avg" class="tab-content hidden lg:col-span-2 reveal-on-scroll">
+                        <div class="bg-secondary/50 backdrop-blur-sm border border-primary p-8 relative overflow-hidden group min-h-[400px]">
+                            <div class="telemetry-label mb-8"><span class="signal-bar"></span> Neural_Resonance_Pattern // BIO_X</div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="space-y-6">
+                                    <div class="p-6 bg-[var(--bg-graphite)] border border-[var(--border-primary)]">
+                                        <h4 class="text-[10px] font-bold text-accent uppercase tracking-tighter mb-4">Mood Distribution</h4>
+                                        <div class="space-y-3">
+                                            <div class="flex justify-between text-[10px]">
+                                                <span>Focused</span>
+                                                <span class="text-primary font-bold">65%</span>
+                                            </div>
+                                            <div class="h-1 bg-primary/10 w-full"><div class="h-full bg-accent" style="width: 65%"></div></div>
+                                            <div class="flex justify-between text-[10px]">
+                                                <span>Calm</span>
+                                                <span class="text-primary font-bold">25%</span>
+                                            </div>
+                                            <div class="h-1 bg-primary/10 w-full"><div class="h-full bg-accent/60" style="width: 25%"></div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="mood-insights-container" class="space-y-4">
+                                    <div class="p-4 border border-accent/20 bg-accent/5">
+                                        <div class="text-[8px] font-bold text-accent uppercase mb-2">AI_REASONING</div>
+                                        <p class="text-[10px] text-secondary leading-relaxed">System detects high cognitive coherence after 14:00. Recommend scheduling deep work sessions in this window.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar content (Actions) -->
                     <div class="space-y-6">
                         <!-- Mood Tracker -->
-                        <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
-                            <h3 class="text-lg font-bold text-primary mb-4">Quick Mood Check</h3>
-                            <div class="grid grid-cols-2 gap-2 mb-4">
+                        <div
+                            class="bg-secondary/50 backdrop-blur-sm border border-primary p-6 relative overflow-hidden group">
+                            <div class="telemetry-label mb-4">Mood_Tracker // INF_A</div>
+                            <div class="grid grid-cols-2 gap-1 mb-4">
                                 <button onclick="window.location.href='mood-selection.html'"
-                                    class="translucent-button p-3 rounded-lg text-center hover:scale-105 transition-transform">
-                                    <span class="text-2xl block mb-1">😄</span>
-                                    <span class="text-xs">Happy</span>
+                                    class="obsidian-button flex-col !items-start !p-4 !gap-1">
+                                    <span class="text-2xl">😄</span>
+                                    <span class="text-[10px] uppercase tracking-widest text-secondary">Optimal</span>
                                 </button>
                                 <button onclick="window.location.href='mood-selection.html'"
-                                    class="translucent-button p-3 rounded-lg text-center hover:scale-105 transition-transform">
-                                    <span class="text-2xl block mb-1">😐</span>
-                                    <span class="text-xs">Neutral</span>
-                                </button>
-                                <button onclick="window.location.href='mood-selection.html'"
-                                    class="translucent-button p-3 rounded-lg text-center hover:scale-105 transition-transform">
-                                    <span class="text-2xl block mb-1">😔</span>
-                                    <span class="text-xs">Sad</span>
-                                </button>
-                                <button onclick="window.location.href='mood-selection.html'"
-                                    class="translucent-button p-3 rounded-lg text-center hover:scale-105 transition-transform">
-                                    <span class="text-2xl block mb-1">😟</span>
-                                    <span class="text-xs">Anxious</span>
+                                    class="obsidian-button flex-col !items-start !p-4 !gap-1">
+                                    <span class="text-2xl">😐</span>
+                                    <span class="text-[10px] uppercase tracking-widest text-secondary">Stable</span>
                                 </button>
                             </div>
                             <button onclick="window.location.href='mood-selection.html'"
-                                class="w-full translucent-button py-2 rounded-lg text-sm font-medium">
-                                View All Moods
+                                class="w-full obsidian-button justify-center text-xs">
+                                Full Biometric Log
                             </button>
                         </div>
 
                         <!-- Study Library -->
-                        <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
-                            <h3 class="text-lg font-bold text-primary mb-4">Study Resources</h3>
-                            <div class="space-y-3">
+                        <div
+                            class="bg-secondary/50 backdrop-blur-sm border border-primary p-6 relative overflow-hidden group">
+                            <div class="telemetry-label mb-4">Knowledge_Vault // VAULT_B</div>
+                            <div class="space-y-1">
                                 <button onclick="window.location.href='study-library.html'"
-                                    class="w-full translucent-button py-3 rounded-lg flex items-center gap-3 hover:scale-105 transition-transform">
+                                    class="w-full obsidian-button !justify-start !px-4">
                                     <span class="material-symbols-outlined text-accent">library_books</span>
-                                    <span>Browse Study Materials</span>
+                                    <span
+                                        class="text-xs text-secondary font-bold uppercase tracking-widest">Browse_Assets</span>
                                 </button>
                                 <button onclick="window.location.href='study-library.html'"
-                                    class="w-full translucent-button py-3 rounded-lg flex items-center gap-3 hover:scale-105 transition-transform">
+                                    class="w-full obsidian-button !justify-start !px-4">
                                     <span class="material-symbols-outlined text-accent">upload</span>
-                                    <span>Upload Material</span>
+                                    <span
+                                        class="text-xs text-secondary font-bold uppercase tracking-widest">Transmit_Data</span>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Rewards -->
-                        <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
-                            <h3 class="text-lg font-bold text-primary mb-4">Your Progress</h3>
-                            <div class="space-y-3">
+                        <div
+                            class="bg-secondary/50 backdrop-blur-sm border border-primary p-6 relative overflow-hidden group">
+                            <div class="telemetry-label mb-4">Progression_Hub // CORE_C</div>
+                            <div class="space-y-1">
                                 <button onclick="window.location.href='rewards.html'"
-                                    class="w-full translucent-button py-3 rounded-lg flex items-center gap-3 hover:scale-105 transition-transform">
+                                    class="w-full obsidian-button !justify-start !px-4">
                                     <span class="material-symbols-outlined text-accent">emoji_events</span>
-                                    <span>View Rewards</span>
+                                    <span
+                                        class="text-xs text-secondary font-bold uppercase tracking-widest">Unlock_Badges</span>
                                 </button>
                                 <button onclick="window.location.href='profile.html'"
-                                    class="w-full translucent-button py-3 rounded-lg flex items-center gap-3 hover:scale-105 transition-transform">
+                                    class="w-full obsidian-button !justify-start !px-4">
                                     <span class="material-symbols-outlined text-accent">person</span>
-                                    <span>Edit Profile</span>
+                                    <span
+                                        class="text-xs text-secondary font-bold uppercase tracking-widest">Ident_Profile</span>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Activity -->
+                <!-- Activity Logs -->
                 <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Recent Moods -->
-                    <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
-                        <h3 class="text-lg font-bold text-primary mb-4">Recent Moods</h3>
-                        <div id="recent-moods" class="space-y-2">
+                    <div
+                        class="bg-secondary/50 backdrop-blur-sm border border-primary p-6 relative overflow-hidden group">
+                        <div class="telemetry-label mb-6">Biometric_Log // DATA_X</div>
+                        <div id="recent-moods" class="space-y-4">
                             <!-- Recent moods will be loaded here -->
                         </div>
                     </div>
 
                     <!-- Recent Activity -->
-                    <div class="bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
-                        <h3 class="text-lg font-bold text-primary mb-4">Recent Activity</h3>
-                        <div id="recent-activity" class="space-y-2">
+                    <div
+                        class="bg-secondary/50 backdrop-blur-sm border border-primary p-6 relative overflow-hidden group">
+                        <div class="telemetry-label mb-6">Synchronization_History // DATA_Y</div>
+                        <div id="recent-activity" class="space-y-4">
                             <!-- Recent activity will be loaded here -->
                         </div>
                     </div>
                 </div>
 
                 <!-- Study Materials -->
-                <div class="mt-8 bg-secondary/50 backdrop-blur-sm border border-primary rounded-xl p-6">
-                    <h3 class="text-lg font-bold text-primary mb-4">Your Study Materials</h3>
-                    <div id="recent-materials" class="space-y-2">
+                <div
+                    class="mt-8 bg-secondary/50 backdrop-blur-sm border border-primary p-6 relative overflow-hidden group">
+                    <div class="telemetry-label mb-6">Neural_Assets // VAULT_ENTRY</div>
+                    <div id="recent-materials" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Recent materials will be loaded here -->
                     </div>
                 </div>

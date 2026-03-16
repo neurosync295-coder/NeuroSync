@@ -31,9 +31,52 @@
 </head>
 
 <body class="bg-primary dark">
-  <!-- Side Menu Container (Injected by sidemenu.js) -->
   <div id="side-menu-container"></div>
   <div id="universal-navbar-container"></div>
+
+  <!-- Neural Link Overlay Strip -->
+  <div class="fixed top-0 left-0 w-full h-1 z-[60] bg-accent/20">
+    <div class="h-full bg-accent animate-[scan_4s_linear_infinite]" style="width: 20%"></div>
+  </div>
+  <div class="fixed top-4 right-8 z-[60] hidden md:flex gap-6 pointer-events-none">
+    <div class="telemetry-label !text-[8px] opacity-50">
+      Neural_Link // <span class="text-accent animate-pulse">ACTIVE</span> // SEC_01
+    </div>
+    <div class="telemetry-label !text-[8px] opacity-50" id="system-time">
+      18:49:00 // SYS_UTC
+    </div>
+  </div>
+
+  <!-- Advanced Neural Particle Grid & Background Web -->
+  <div class="fixed inset-0 pointer-events-none z-[-2] overflow-hidden bg-[#0A0A0B]">
+    <canvas id="neural-web-canvas" class="absolute inset-0 opacity-40"></canvas>
+  </div>
+  
+  <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden" id="particle-canvas">
+    <!-- Particles injected via JS or CSS -->
+    <div class="particle"
+      style="--x-start:10vw;--y-start:20vh;--x-end:85vw;--y-end:75vh;width:2px;height:2px;animation-delay:0s;"></div>
+    <div class="particle"
+      style="--x-start:80vw;--y-start:10vh;--x-end:15vw;--y-end:85vh;width:1px;height:1px;animation-delay:-4s;"></div>
+    <div class="particle"
+      style="--x-start:5vw;--y-start:90vh;--x-end:92vw;--y-end:8vh;width:3px;height:3px;animation-delay:-8s;"></div>
+    <div class="particle"
+      style="--x-start:90vw;--y-start:85vh;--x-end:10vw;--y-end:15vh;width:2px;height:2px;animation-delay:-12s;"></div>
+  </div>
+
+  <!-- HUD Viewport Brackets -->
+  <div class="fixed inset-6 pointer-events-none z-[70] hidden xl:block">
+    <div class="absolute top-0 left-0 w-12 h-12 border-t border-l border-accent/40 hud-bracket"></div>
+    <div class="absolute top-0 right-0 w-12 h-12 border-t border-r border-accent/40 hud-bracket"></div>
+    <div class="absolute bottom-0 left-0 w-12 h-12 border-b border-l border-accent/40 hud-bracket"></div>
+    <div class="absolute bottom-0 right-0 w-12 h-12 border-b border-r border-accent/40 hud-bracket"></div>
+    
+    <!-- Sector Indicator -->
+    <div class="absolute top-1/2 -left-4 -translate-y-1/2 -rotate-90 flex items-center gap-4">
+      <div class="telemetry-label !text-[8px] opacity-20" id="hud-sector-indicator">SECTOR_ID // CORE_01</div>
+      <div class="w-16 h-px bg-accent/20"></div>
+    </div>
+  </div>
 
   <main>
     <!-- Asymmetric Hero -->
@@ -47,27 +90,78 @@
           NeuroSync utilizes advanced neural patterns to harmonize your study environment. Not just a timer—a biological
           synchronizer.
         </p>
-        <div class="flex gap-4">
-          <a href="/html/auth.html" class="obsidian-button obsidian-button-primary">
-            Start Syncing
-          </a>
-          <button class="obsidian-button"
-            onclick="document.getElementById('focus-timer').scrollIntoView({behavior: 'smooth'})">
-            Explore Engine
-          </button>
+        <div class="flex flex-col gap-6 mb-10">
+          <div id="logged-out-actions" class="flex gap-4">
+            <a href="/html/auth.html" class="obsidian-button obsidian-button-primary">
+              Start Syncing
+            </a>
+            <button class="obsidian-button"
+              onclick="document.getElementById('focus-timer').scrollIntoView({behavior: 'smooth'})">
+              Explore Engine
+            </button>
+          </div>
+
+          <!-- Logged-In Greeting (Hidden by default) -->
+          <div id="logged-in-greeting" class="hidden flex-col gap-2 items-start reveal-on-scroll">
+            <div class="telemetry-label !text-accent animate-pulse">Sync_Established // AUTH_LEVEL_01</div>
+            <h2 class="text-4xl md:text-5xl font-black tracking-tighter" id="user-greeting-name">Welcome, Traveler</h2>
+            <div class="flex gap-4 mt-6">
+              <a href="/html/dashboard.html" class="obsidian-button obsidian-button-primary !py-2 !px-6">
+                Go to Dashboard
+              </a>
+              <button class="obsidian-button !py-2 !px-6"
+                onclick="document.getElementById('activity-relay').scrollIntoView({behavior: 'smooth'})">
+                View Activity
+              </button>
+            </div>
+          </div>
+
+          <!-- Hero Telemetry -->
+          <div class="flex flex-wrap gap-8 items-center pt-8 border-t border-[var(--bg-graphite)]">
+            <div class="telemetry-label">
+              <span class="signal-bar"></span>
+              Sector: <span class="telemetry-value">Primary_Node</span>
+            </div>
+            <div class="telemetry-label">
+              Latency: <span class="telemetry-value">12ms</span>
+              <div class="status-bar-wrap">
+                <div class="status-bar-active"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="hidden lg:flex justify-end pr-10 reveal-on-scroll" style="animation-delay: 0.2s;">
         <div class="relative group">
+          <!-- Engine Telemetry Orbitals -->
+          <div
+            class="absolute -top-12 -left-12 telemetry-label !text-[9px] opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            SYNC_LVL: <span class="telemetry-value">0.982</span>
+          </div>
+          <div
+            class="absolute -bottom-12 -right-12 telemetry-label !text-[9px] opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            SCAN_FREQ: <span class="telemetry-value">44.1kHz</span>
+          </div>
+          <div
+            class="absolute top-1/2 -right-24 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+            <div class="w-12 h-[1px] bg-accent/30"></div>
+            <div class="w-8 h-[1px] bg-accent/30 self-end"></div>
+            <div class="w-10 h-[1px] bg-accent/30"></div>
+          </div>
+
           <div
             class="absolute -inset-20 bg-[var(--accent-signal)] opacity-5 blur-[100px] group-hover:opacity-10 transition-opacity">
           </div>
           <div
-            class="w-80 h-80 border-2 border-[var(--bg-graphite)] items-center justify-center flex relative overflow-hidden">
+            class="w-80 h-80 border-2 border-[var(--bg-graphite)] items-center justify-center flex relative overflow-hidden group-hover:border-accent/40 transition-colors duration-500">
             <span
               class="text-8xl grayscale contrast-125 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700">🧠</span>
             <div class="absolute bottom-4 left-4 text-[10px] tracking-widest text-[var(--text-secondary)] uppercase">
               Focus Sprite // Localized</div>
+            <!-- Diagonal Scan Effect -->
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-transparent via-accent/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000">
+            </div>
           </div>
         </div>
       </div>
@@ -78,19 +172,25 @@
       <div class="max-w-7xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#27272A] border-[var(--border-raw)]">
           <div class="fragment-card reveal-on-scroll">
-            <span class="text-2xl mb-6 block">01</span>
+            <div class="telemetry-label mb-2"><span class="w-1.5 h-1.5 bg-[var(--accent-signal)]"></span> Module 01
+            </div>
+            <span class="text-2xl mb-4 block font-black">NEURAL</span>
             <h3 class="text-xl font-bold mb-4">Neural Tracking</h3>
             <p class="text-secondary text-sm leading-relaxed">Continuous emotion mapping through non-invasive behavioral
               markers. Dynamic tip generation based on real-time fatigue levels.</p>
           </div>
           <div class="fragment-card reveal-on-scroll" style="animation-delay: 0.1s;">
-            <span class="text-2xl mb-6 block">02</span>
+            <div class="telemetry-label mb-2"><span class="w-1.5 h-1.5 bg-[var(--accent-signal)]"></span> Module 02
+            </div>
+            <span class="text-2xl mb-4 block font-black">ARCHI</span>
             <h3 class="text-xl font-bold mb-4">Focus Architecture</h3>
             <p class="text-secondary text-sm leading-relaxed">Atmospheric audio landscapes designed to induce Alpha-wave
               states. Immersive UI that eliminates peripheral digital noise.</p>
           </div>
           <div class="fragment-card reveal-on-scroll" style="animation-delay: 0.2s;">
-            <span class="text-2xl mb-6 block">03</span>
+            <div class="telemetry-label mb-2"><span class="w-1.5 h-1.5 bg-[var(--accent-signal)]"></span> Module 03
+            </div>
+            <span class="text-2xl mb-4 block font-black">ASSETS</span>
             <h3 class="text-xl font-bold mb-4">Verified Assets</h3>
             <p class="text-secondary text-sm leading-relaxed">Direct access to the Teacher-Approved vault. Collaborative
               synchronization with peer study groups worldwide.</p>
@@ -138,6 +238,102 @@
       </div>
     </section>
 
+    <!-- Neural Progression Relay (Showcase for guest users) -->
+    <section id="evolution-section" class="hidden py-32 px-6 relative overflow-hidden bg-[#0A0A0B] border-y border-[var(--border-raw)]">
+      <!-- Background Scanning Lines -->
+      <div class="absolute inset-0 pointer-events-none opacity-5">
+        <div class="h-px w-full bg-accent absolute top-1/4 animate-[scan_8s_linear_infinite]"></div>
+        <div class="h-px w-full bg-accent absolute top-3/4 animate-[scan_8s_linear_infinite_reverse]"></div>
+      </div>
+
+      <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div class="reveal-on-scroll">
+            <div class="telemetry-label mb-4">Progression_Protocol // SEC_05</div>
+            <h2 class="heading-xl mb-8">Neural Evolution</h2>
+            <p class="text-secondary text-lg mb-12 max-w-lg">
+              Your cognitive growth is quantified. As you synchronize with the Focus Engine, you ascend through neural tiers, unlocking advanced bio-telemetry and encrypted assets.
+            </p>
+
+            <div class="space-y-4">
+              <div class="group p-6 bg-[#161618] border border-[var(--border-raw)] hover:border-accent/40 transition-all duration-500 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[10px] tracking-[0.3em] uppercase text-secondary">Ascension_Path</span>
+                  <span class="telemetry-label !text-[9px]">XP_MULT: 1.25x</span>
+                </div>
+                <div class="h-2 w-full bg-[#0D0D0E] relative overflow-hidden">
+                  <div id="index-evolution-progress" class="absolute inset-y-0 left-0 bg-accent w-0 transition-all duration-1000"></div>
+                  <div class="absolute inset-y-0 left-0 bg-accent/10 w-full animate-[progress_20s_linear_infinite]"></div>
+                </div>
+                <div class="flex justify-between mt-4">
+                  <div class="flex flex-col">
+                    <span class="text-xs font-bold text-primary">CURRENT_LEVEL</span>
+                    <span id="index-level-display" class="text-2xl font-black text-accent uppercase">LVL_01</span>
+                  </div>
+                  <div class="flex flex-col items-end">
+                    <span class="text-xs font-bold text-primary">NEXT_SYNC</span>
+                    <span id="index-next-level-name" class="text-2xl font-black text-secondary uppercase">Newbie</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex gap-4">
+                <a href="/html/auth.html" class="obsidian-button obsidian-button-primary w-full justify-center">
+                  Start Your Evolution
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 reveal-on-scroll" style="animation-delay: 0.2s;">
+            <!-- Tier 01 -->
+            <div class="p-6 bg-[#161618] border border-[var(--border-raw)] group hover:border-accent/40 transition-all duration-500">
+              <div class="flex justify-between items-start mb-6">
+                <span class="text-3xl grayscale group-hover:grayscale-0 transition-all">🧠</span>
+                <span class="telemetry-label !text-[8px]">LVL_01</span>
+              </div>
+              <h3 class="text-sm font-bold uppercase tracking-widest mb-2">Beginner</h3>
+              <p class="text-[10px] text-secondary leading-relaxed mb-4">Basic focus tracking and atmospheric audio baseline.</p>
+              <div class="text-[9px] font-mono text-accent">REQ: 0 XP</div>
+            </div>
+
+            <!-- Tier 02 -->
+            <div class="p-6 bg-[#161618] border border-[var(--border-raw)] group hover:border-accent/40 transition-all duration-500">
+              <div class="flex justify-between items-start mb-6">
+                <span class="text-3xl grayscale group-hover:grayscale-0 transition-all">🌊</span>
+                <span class="telemetry-label !text-[8px]">LVL_02</span>
+              </div>
+              <h3 class="text-sm font-bold uppercase tracking-widest mb-2">Newbie</h3>
+              <p class="text-[10px] text-secondary leading-relaxed mb-4">Advanced biometric logs and mood-matching audio.</p>
+              <div class="text-[9px] font-mono text-accent">REQ: 50 XP</div>
+            </div>
+
+            <!-- Tier 03 -->
+            <div class="p-6 bg-[#161618] border border-[var(--border-raw)] group hover:border-accent/40 transition-all duration-500">
+              <div class="flex justify-between items-start mb-6">
+                <span class="text-3xl grayscale group-hover:grayscale-0 transition-all">🔒</span>
+                <span class="telemetry-label !text-[8px]">LVL_03</span>
+              </div>
+              <h3 class="text-sm font-bold uppercase tracking-widest mb-2">Emerge</h3>
+              <p class="text-[10px] text-secondary leading-relaxed mb-4">Full Study Vault access and encrypted asset sharing.</p>
+              <div class="text-[9px] font-mono text-accent">REQ: 150 XP</div>
+            </div>
+
+            <!-- Tier 04 -->
+            <div class="p-6 bg-[#161618] border border-[var(--border-raw)] group hover:border-accent/40 transition-all duration-500">
+              <div class="flex justify-between items-start mb-6">
+                <span class="text-3xl grayscale group-hover:grayscale-0 transition-all">💎</span>
+                <span class="telemetry-label !text-[8px]">LVL_04</span>
+              </div>
+              <h3 class="text-sm font-bold uppercase tracking-widest mb-2">Enthusiast</h3>
+              <p class="text-[10px] text-secondary leading-relaxed mb-4">Priority routing and early access to Neural Plugins.</p>
+              <div class="text-[9px] font-mono text-accent">REQ: 350 XP</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="py-32 px-6 bg-[#0D0D0E] border-y var(--border-raw)">
       <div class="max-w-7xl mx-auto">
         <div class="flex items-end justify-between mb-16 reveal-on-scroll">
@@ -153,6 +349,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div class="fragment-card reveal-on-scroll">
+            <div class="telemetry-label mb-4">Vault_Entry // QUANT</div>
             <div
               class="h-64 bg-[#161618] border-b var(--border-raw) flex items-center justify-center grayscale contrast-125 mb-6">
               <span class="text-6xl">📐</span>
@@ -162,6 +359,7 @@
             </p>
           </div>
           <div class="fragment-card reveal-on-scroll" style="animation-delay: 0.1s;">
+            <div class="telemetry-label mb-4">Vault_Entry // PHYS</div>
             <div
               class="h-64 bg-[#161618] border-b var(--border-raw) flex items-center justify-center grayscale contrast-125 mb-6">
               <span class="text-6xl">⚛️</span>
@@ -170,6 +368,7 @@
             <p class="text-secondary text-sm">Quantum mechanics and thermodynamics modules for high-level research.</p>
           </div>
           <div class="fragment-card reveal-on-scroll" style="animation-delay: 0.2s;">
+            <div class="telemetry-label mb-4">Vault_Entry // CHEM</div>
             <div
               class="h-64 bg-[#161618] border-b var(--border-raw) flex items-center justify-center grayscale contrast-125 mb-6">
               <span class="text-6xl">🧪</span>
@@ -180,12 +379,31 @@
           </div>
         </div>
       </div>
+      </div>
+    </section>
+
+    <!-- Activity Relay Section (Visible only when logged in) -->
+    <section id="activity-relay" class="hidden py-32 px-6 border-b var(--border-raw)">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex items-end justify-between mb-16 reveal-on-scroll">
+          <div>
+            <span
+              class="text-[var(--accent-signal)] font-bold tracking-[0.5em] uppercase text-xs mb-4 block">Telemetry</span>
+            <h2 class="heading-xl">Recent Activity</h2>
+          </div>
+        </div>
+
+        <div id="activity-logs-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-[#27272A] border-[var(--border-raw)] overflow-hidden">
+          <!-- Activity items injected via JS -->
+        </div>
+      </div>
     </section>
 
     <!-- Comments Section -->
     <section class="py-32 px-6">
       <div class="max-w-3xl mx-auto reveal-on-scroll">
         <div class="text-center mb-16">
+          <div class="telemetry-label justify-center mb-4">Transmission_Relay // SEC_04</div>
           <h2 class="heading-xl">Peer Logs</h2>
           <p class="text-secondary mt-4">Synchronization status from the network.</p>
         </div>
@@ -233,6 +451,49 @@
       <source src="https://www.soundjay.com/misc/sounds/white-noise.mp3" type="audio/mpeg">
     </audio>
   </div>
+
+  <footer class="py-20 px-6 border-t border-[var(--bg-graphite)] bg-[#0A0A0B] relative overflow-hidden">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12">
+      <div class="max-w-sm">
+        <h3 class="text-2xl font-black tracking-tighter mb-4 text-accent">NEURO_SYNC</h3>
+        <p class="text-secondary text-xs leading-loose opacity-60">
+          The NeuroSync protocol is maintained by the Collective Intelligence Sector. All asset synchronization is
+          verified through biological consensus.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-12">
+        <div>
+          <div class="telemetry-label mb-6">Navigation_Nodes</div>
+          <ul class="space-y-3 text-[10px] uppercase tracking-widest font-bold">
+            <li><a href="/html/dashboard.html" class="hover:text-accent transition-colors">Dashboard</a></li>
+            <li><a href="/html/study-library.html" class="hover:text-accent transition-colors">Vault</a></li>
+            <li><a href="/html/auth.html" class="hover:text-accent transition-colors">Connect</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="telemetry-label mb-6">Sector_System</div>
+          <ul class="space-y-3 text-[10px] uppercase tracking-widest font-bold">
+            <li class="opacity-40">SEC_01: Core</li>
+            <li class="opacity-40">SEC_02: Audio</li>
+            <li class="opacity-40">SEC_03: Data</li>
+          </ul>
+        </div>
+        <div class="md:col-span-1 col-span-2">
+          <div class="telemetry-label mb-6">System_Status</div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-2 h-2 rounded-full bg-accent animate-pulse"></div>
+            <span class="text-[10px] font-mono text-accent">ALL_SYSTEMS_NOMINAL</span>
+          </div>
+          <p class="text-secondary text-[9px] font-mono">PROTO: 1.0.4-LNR</p>
+        </div>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/5 flex justify-between items-center opacity-30">
+      <div class="text-[9px] font-mono">&copy; 2026 NEUROSYNC // OPEN_SOURCE</div>
+      <div class="text-[9px] font-mono hidden md:block">LOC: UTC_09 // 127.0.0.1</div>
+    </div>
+  </footer>
 
   <script type="module" src="/js/index.js"></script>
 </body>

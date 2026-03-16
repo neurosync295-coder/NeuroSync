@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.supabase.co https://res.cloudinary.com https://*.googleusercontent.com; connect-src 'self' https://*.supabase.co https://www.soundjay.com; media-src 'self' https://www.soundjay.com;">
+    <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <title>Neural Admin - NeuroSync</title>
+    <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="stylesheet" href="/css/global.css" />
+    <link rel="stylesheet" href="/css/mobile-optimizations.css" />
+    <script src="/js/admin-auth-guard.js"></script>
+    <script src="/js/sidemenu.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/navbar-component.js"></script>
+    <script type="module" src="/js/auth-guard.js"></script>
+    <script type="module">
+        import { supabase } from '/js/supabase.js';
+
+        // Check authentication and load profile
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (!session && event !== 'INITIAL_SESSION') {
+                if (!session) { window.location.href = '/html/auth.html'; return; }
+            } else if (session) {
+                await checkAdminStatus(session.user);
+            }
+        });
+
+        // Initial check
+        (async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = 'auth.html'; return; }
+            await checkAdminStatus(session.user);
+        })();
+
+        async function checkAdminStatus(user) {
+            if (!user) return;
+
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('first_name, last_name, role')
+                    .eq('id', user.id)
+                    .single();
+
+                if (!profile || !profile.role || profile.role.toLowerCase() !== 'admin') {
+                    // Unauthorized: Kick them back to dashboard
+                    window.location.href = '/html/dashboard.html';
+                    return;
+                }
+
+                document.getElementById('display-name').textContent = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || user.email.split('@')[0];
+                document.getElementById('display-role').textContent = profile.role.toUpperCase();
+                
+                // Remove loading overlay once verified
+                document.getElementById('security-scan').style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                window.location.href = '/html/dashboard.html';
+            }
+        }
+    </script>
+    <style>
+        .tech-panel {
+            background: linear-gradient(135deg, rgba(22, 22, 24, 0.9) 0%, rgba(13, 13, 14, 0.95) 100%);
+            border: 1px solid #27272A;
+            position: relative;
+        }
+        
+        .tech-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-signal), transparent);
+            opacity: 0.3;
+        }
+        
+        /* Submit button geometric */
+        .btn-neural {
+            background: transparent;
+            border: 1px solid var(--accent-signal);
+            color: var(--accent-signal);
+            position: relative;
+            overflow: hidden;
+            border-radius: 0;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: bold;
+        }
+        .btn-neural::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-signal);
+            transition: all 0.3s ease;
+            z-index: -1;
+        }
+        .btn-neural:hover::before {
+            left: 0;
+        }
+        .btn-neural:hover {
+            color: #000;
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+        }
+
+        /* Overlay for security scanning animation */
+        #security-scan {
+            position: fixed;
+            inset: 0;
+            background: #0D0D0E;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--accent-signal);
+        }
+        
+        .scan-line {
+            width: 200px;
+            height: 2px;
+            background: var(--accent-signal);
+            position: relative;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        
+        .scan-line::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: #fff;
+            animation: scanning 1s infinite linear;
+        }
+        
+        @keyframes scanning {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+    </style>
+</head>
+
+<body class="bg-obsidian dark obsidian-stream-body">
+    
+    <!-- Security Overlay (removed via JS when auth clears) -->
+    <div id="security-scan">
+        <span class="material-symbols-outlined text-6xl animate-pulse">fingerprint</span>
+        <div class="font-mono text-sm tracking-widest mt-4">VERIFYING_ACCESS_LEVEL...</div>
+        <div class="scan-line"></div>
+    </div>
+
+    <!-- Particles -->
+    <div class="particle" style="top: 20%; left: 10%; width: 2px; height: 2px; --x-start: 0; --y-start: 0; --x-end: 100px; --y-end: -100px;"></div>
+    <div class="particle" style="top: 60%; left: 80%; width: 3px; height: 3px; --x-start: 0; --y-start: 0; --x-end: -50px; --y-end: -150px; animation-delay: 2s;"></div>
+    <div class="particle" style="top: 80%; left: 30%; width: 1px; height: 1px; --x-start: 0; --y-start: 0; --x-end: 150px; --y-end: -50px; animation-delay: 5s;"></div>
+
+    <div id="side-menu-container"></div>
+    <div id="universal-navbar-container"></div>
+
+    <div class="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden"
+        style='font-family: "Space Grotesk", "Noto Sans", sans-serif;'>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 lg:p-10 relative z-10 flex items-center justify-center">
+            <div class="w-full max-w-6xl mx-auto">
+                <div class="mb-12 border-l-2 border-accent-signal pl-4 flex justify-between items-end">
+                    <div>
+                        <div class="telemetry-label mb-2">
+                            <span class="material-symbols-outlined text-sm">admin_panel_settings</span>
+                            ROOT_ACCESS_GRANTED
+                        </div>
+                        <h1 class="text-4xl md:text-5xl font-bold text-primary tracking-tight">COMMAND_CENTER</h1>
+                        <p class="text-secondary mt-2 font-mono text-sm max-w-md">Global telemetry and operational override portal.</p>
+                    </div>
+                    
+                    <div class="hidden md:block text-right">
+                        <p class="text-[10px] text-muted font-mono mb-1">AUTHORIZED_OPERATOR</p>
+                        <p id="display-name" class="text-primary font-mono text-sm bg-obsidian/50 px-2 py-1 inline-block border border-white/5">AUTHENTICATING...</p>
+                        <p id="display-role" class="text-accent-signal font-mono text-xs mt-1">...</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    
+                    <!-- Global Telemetry (Left Sidebar) -->
+                    <div class="lg:col-span-4 space-y-6">
+                        <!-- System Health Card -->
+                        <div class="tech-panel p-6 border-l-2 border-l-green-500">
+                            <div class="flex items-center justify-between mb-6">
+                                <div class="flex items-center gap-2">
+                                    <span class="signal-bar bg-green-500"></span>
+                                    <h3 class="telemetry-label m-0 text-green-500">SYSTEM_HEALTH</h3>
+                                </div>
+                                <span class="material-symbols-outlined text-green-500 animate-pulse">public</span>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center border-b border-raw pb-2">
+                                    <span class="font-mono text-xs text-secondary">CORE_LATENCY</span>
+                                    <span class="font-mono text-sm text-green-500 font-bold">14ms</span>
+                                </div>
+                                <div class="flex justify-between items-center border-b border-raw pb-2">
+                                    <span class="font-mono text-xs text-secondary">ACTIVE_USERS</span>
+                                    <span class="font-mono text-sm text-primary font-bold">1,248</span>
+                                </div>
+                                <div class="flex justify-between items-center border-b border-raw pb-2">
+                                    <span class="font-mono text-xs text-secondary">LOAD_AVERAGE</span>
+                                    <span class="font-mono text-sm text-primary font-bold">24%</span>
+                                </div>
+                                <div class="flex justify-between items-center border-b border-raw pb-2">
+                                    <span class="font-mono text-xs text-secondary">DATABASE_STATUS</span>
+                                    <span class="font-mono text-sm text-green-500 font-bold">SYNCED</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Graph (Mock) -->
+                        <div class="tech-panel p-6 h-48 flex flex-col justify-end relative overflow-hidden group">
+                           <div class="absolute top-4 left-4"><span class="telemetry-label">NETWORK_TRAFFIC</span></div>
+                           
+                           <!-- Fake Graph Bars -->
+                           <div class="flex items-end justify-between h-24 gap-1 opacity-50 relative z-10 w-full pl-6 pr-6">
+                               <div class="w-full bg-accent-signal hover:bg-[#fff] transition-all h-[40%]"></div>
+                               <div class="w-full bg-accent-signal hover:bg-[#fff] transition-all h-[60%]"></div>
+                               <div class="w-full bg-accent-signal hover:bg-[#fff] transition-all h-[30%]"></div>
+                               <div class="w-full bg-accent-signal hover:bg-[#fff] transition-all h-[80%]"></div>
+                               <div class="w-full bg-accent-signal hover:bg-[#fff] transition-all h-[50%]"></div>
+                               <div class="w-full bg-accent-signal hover:bg-[#fff] transition-all h-[95%]"></div>
+                               <div class="w-full bg-accent-signal hover:bg-[#fff] transition-all h-[45%]"></div>
+                               <div class="w-full bg-accent-signal hover:bg-[#fff] transition-all h-[70%]"></div>
+                           </div>
+                           <div class="absolute bottom-0 w-full h-[1px] bg-accent-signal left-0 opacity-30"></div>
+                        </div>
+                    </div>
+
+                    <!-- Operational Hub (Central Grid) -->
+                    <div class="lg:col-span-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            <!-- Module: Feedback Admin -->
+                            <div class="tech-panel p-8 group hover:border-accent-signal transition-colors flex flex-col justify-between h-64">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <span class="material-symbols-outlined text-3xl text-accent-signal group-hover:scale-110 transition-transform">forum</span>
+                                        <h3 class="text-xl font-bold text-primary tracking-wider">FEEDBACK_OP</h3>
+                                    </div>
+                                    <p class="text-sm text-secondary font-mono leading-relaxed">Review, classify, and respond to neural feedback transmissions from standard users. Vital for UX tuning.</p>
+                                </div>
+                                <a href="/html/feedback-admin.html" class="btn-neural py-3 px-6 text-center text-sm flex items-center justify-center gap-2 mt-4">
+                                    <span>ACCESS_MODULE</span>
+                                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                </a>
+                            </div>
+
+                            <!-- Module: Material Review -->
+                            <div class="tech-panel p-8 group hover:border-accent-signal transition-colors flex flex-col justify-between h-64">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <span class="material-symbols-outlined text-3xl text-accent-signal group-hover:scale-110 transition-transform">library_books</span>
+                                        <h3 class="text-xl font-bold text-primary tracking-wider">MAT_REVIEW</h3>
+                                    </div>
+                                    <p class="text-sm text-secondary font-mono leading-relaxed">Audit uploaded study materials, verify integrity, and approve for public neural hive distribution.</p>
+                                </div>
+                                <a href="/html/material-admin.html" class="btn-neural py-3 px-6 text-center text-sm flex items-center justify-center gap-2 mt-4">
+                                    <span>ACCESS_MODULE</span>
+                                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                </a>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

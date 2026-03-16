@@ -14,9 +14,11 @@
     <title>Feedback Admin - NeuroSync</title>
     <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="/js/admin-auth-guard.js"></script>
     <script src="../js/sidemenu.js"></script>
     <script src="../js/theme.js"></script>
-    <script src="../js/navbar-component.js"></script>
+    <script src="/js/navbar-component.js"></script>
+    <script type="module" src="/js/auth-guard.js"></script>
     <!-- Supabase Integration -->
     <script type="module">
         import { supabase } from '../js/supabase.js';
@@ -208,11 +210,7 @@
             setTimeout(() => notification.remove(), 3000);
         }
 
-        window.signOut = async () => {
-            const { error } = await supabase.auth.signOut();
-            if (error) console.error('Sign out error:', error);
-            window.location.href = '../index.html';
-        };
+// Sign out handled by sidemenu.js
     </script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="../css/global.css">

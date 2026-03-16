@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Root Command Center - NeuroSync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <script src="/js/admin-auth-guard.js"></script>
+    <link rel="stylesheet" href="/css/global.css" />
+    <style>
+        :root {
+            --accent-signal: #F97316;
+            --obsidian: #0D0D0E;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--obsidian);
+            color: #FAFAFA;
+        }
+
+        .tech-panel {
+            background: linear-gradient(135deg, rgba(22, 22, 24, 0.9) 0%, rgba(13, 13, 14, 0.95) 100%);
+            border: 1px solid #27272A;
+            position: relative;
+        }
+
+        /* Modal specific */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col">
+    <!-- Top Bar -->
+    <header class="h-16 border-b border-white/5 bg-black/50 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="size-8 border border-orange-500 flex items-center justify-center">
+                <span class="material-symbols-outlined text-sm text-orange-500">terminal</span>
+            </div>
+            <span class="text-[10px] font-black tracking-[0.4em] uppercase text-white/50">NeuroSync // Root_Admin</span>
+        </div>
+        <div class="flex items-center gap-6">
+            <div class="text-right">
+                <p class="text-[9px] text-zinc-500 font-mono">STATUS: CONNECTED</p>
+                <p class="text-[10px] text-white font-bold font-mono">OPERATOR: ROOT_ADMIN</p>
+            </div>
+            <button onclick="sessionStorage.removeItem('root_admin_session'); window.location.href='admin-login.html';" 
+                class="size-10 border border-white/10 hover:border-red-500 transition-colors flex items-center justify-center group">
+                <span class="material-symbols-outlined text-sm text-zinc-500 group-hover:text-red-500">logout</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex flex-col max-w-[1600px] mx-auto w-full p-8 overflow-hidden">
+        <!-- Dashboard Header -->
+        <div class="mb-8 flex justify-between items-end">
+            <div>
+                <h1 class="text-4xl font-bold tracking-tighter uppercase">Command_Dashboard</h1>
+                <p class="text-zinc-500 text-xs mt-1 font-mono tracking-widest">Awaiting neural instructions...</p>
+            </div>
+            
+            <!-- Tabs Toggle -->
+            <div class="flex border-b border-zinc-800">
+                <button id="tab-materials" class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-orange-500 border-b-2 border-orange-500 bg-orange-500/5 transition-all" onclick="switchTab('materials')">
+                    Materials_Review
+                </button>
+                <button id="tab-feedback" class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-zinc-500 border-b-2 border-transparent transition-all" onclick="switchTab('feedback')">
+                    User_Feedback
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1 min-h-0 overflow-hidden flex flex-col">
+            
+            <!-- Materials Section -->
+            <div id="section-materials" class="flex-1 flex flex-col min-h-0">
+                <!-- Filters/Search -->
+                <div class="flex gap-4 mb-4">
+                    <div class="relative flex-1">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">search</span>
+                        <input type="text" id="search-materials" placeholder="SEARCH_BY_TITLE_OR_USER..." 
+                            class="w-full bg-zinc-900/50 border border-zinc-800 p-3 pl-10 text-[10px] font-mono focus:border-orange-500 outline-none" />
+                    </div>
+                    <select id="filter-status" class="bg-zinc-900/50 border border-zinc-800 px-4 text-[10px] font-mono focus:border-orange-500 outline-none">
+                        <option value="all">STATUS: ALL</option>
+                        <option value="pending">STATUS: PENDING</option>
+                        <option value="approved">STATUS: APPROVED</option>
+                        <option value="rejected">STATUS: REJECTED</option>
+                    </select>
+                </div>
+
+                <!-- Table Container -->
+                <div class="tech-panel flex-1 overflow-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-3 text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-zinc-800 font-black">Subject/Title</th>
+                                <th class="px-4 py-3 text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-zinc-800 font-black">Uploader</th>
+                                <th class="px-4 py-3 text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-zinc-800 font-black">Date</th>
+                                <th class="px-4 py-3 text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-zinc-800 font-black">Metadata</th>
+                                <th class="px-4 py-3 text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-zinc-800 font-black">Status</th>
+                                <th class="px-4 py-3 text-right text-[10px] uppercase tracking-widest text-zinc-500 border-b border-zinc-800 font-black">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="materials-tbody">
+                            <!-- JS Injection -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Feedback Section (Hidden by default) -->
+            <div id="section-feedback" class="hidden flex-1 flex flex-col min-h-0">
+                 <div class="tech-panel flex-1 overflow-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-3 text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-zinc-800 font-black">User</th>
+                                <th class="px-4 py-3 text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-zinc-800 font-black">Email</th>
+                                <th class="px-4 py-3 text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-zinc-800 font-black">Message</th>
+                                <th class="px-4 py-3 text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-zinc-800 font-black">Date</th>
+                                <th class="px-4 py-3 text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-zinc-800 font-black">Status</th>
+                                <th class="px-4 py-3 text-right text-[10px] uppercase tracking-widest text-zinc-500 border-b border-zinc-800 font-black">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedback-tbody">
+                            <!-- JS Injection -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Approval Modal -->
+    <div id="approval-modal" class="modal-backdrop">
+        <div class="login-card p-10 w-full max-w-lg">
+            <div class="flex justify-between items-start mb-6">
+                <h2 class="text-xl font-bold tracking-tight uppercase">Approve_Material</h2>
+                <button onclick="closeModal()" class="text-zinc-500 hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <form id="approval-form" class="space-y-6">
+                <div>
+                    <label class="block text-[10px] uppercase tracking-[0.3em] font-bold text-zinc-400 mb-2">Class_Folder</label>
+                    <div class="flex gap-2">
+                        <select id="modal-class" required class="flex-1 bg-zinc-900 border border-zinc-800 p-3 text-xs outline-none focus:border-orange-500">
+                            <!-- Dynamic UI -->
+                        </select>
+                        <button type="button" onclick="promptNew('class')" class="px-4 border border-zinc-800 hover:bg-white/5 transition-colors">
+                            <span class="material-symbols-outlined text-sm">add</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] uppercase tracking-[0.3em] font-bold text-zinc-400 mb-2">Subject</label>
+                    <div class="flex gap-2">
+                        <select id="modal-subject" required class="flex-1 bg-zinc-900 border border-zinc-800 p-3 text-xs outline-none focus:border-orange-500">
+                            <!-- Dynamic UI -->
+                        </select>
+                        <button type="button" onclick="promptNew('subject')" class="px-4 border border-zinc-800 hover:bg-white/5 transition-colors">
+                            <span class="material-symbols-outlined text-sm">add</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] uppercase tracking-[0.3em] font-bold text-zinc-400 mb-2">Material_Type</label>
+                    <div class="flex gap-2">
+                        <select id="modal-type" required class="flex-1 bg-zinc-900 border border-zinc-800 p-3 text-xs outline-none focus:border-orange-500">
+                            <option value="Notes">Notes</option>
+                            <option value="Practice Paper">Practice Paper</option>
+                            <option value="PYQ">Previous Year Question Paper (PYQ)</option>
+                        </select>
+                        <button type="button" onclick="promptNew('type')" class="px-4 border border-zinc-800 hover:bg-white/5 transition-colors">
+                            <span class="material-symbols-outlined text-sm">add</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex gap-4">
+                    <button type="button" onclick="closeModal()" class="flex-1 py-4 border border-zinc-800 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all">Cancel</button>
+                    <button type="submit" class="flex-1 py-4 bg-orange-500 text-black text-[10px] font-black uppercase tracking-widest hover:bg-orange-400 transition-all">Confirm_Sync</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Rejection Modal (Simplified) -->
+    <div id="rejection-modal" class="modal-backdrop">
+        <div class="login-card p-10 w-full max-w-md">
+            <h2 class="text-xl font-bold tracking-tight uppercase mb-4 text-red-500">Confirm_Rejection</h2>
+            <p class="text-zinc-500 text-sm mb-6">This action will mark the material as rejected and notify the user. Are you sure?</p>
+            <div class="flex gap-4">
+                <button onclick="closeRejectionModal()" class="flex-1 py-4 border border-zinc-800 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all">Abort</button>
+                <button id="confirm-reject-btn" class="flex-1 py-4 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-500 transition-all">Confirm_Reject</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Metadata Modal -->
+    <div id="edit-modal" class="modal-backdrop">
+        <div class="login-card p-10 w-full max-w-lg">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-xl font-bold tracking-tight uppercase">Edit_Registry_Data</h2>
+                    <p class="text-[10px] text-zinc-500 font-mono mt-1" id="edit-material-id">ID: --</p>
+                </div>
+                <button onclick="closeEditModal()" class="text-zinc-500 hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <form id="edit-metadata-form" class="space-y-4">
+                <div>
+                    <label class="block text-[9px] uppercase tracking-[0.3em] font-bold text-zinc-500 mb-1">Display_Title</label>
+                    <input type="text" id="edit-title" required class="w-full bg-zinc-900 border border-zinc-800 p-3 text-xs outline-none focus:border-orange-500" />
+                </div>
+
+                <div>
+                    <label class="block text-[9px] uppercase tracking-[0.3em] font-bold text-zinc-500 mb-1">Description_String</label>
+                    <textarea id="edit-description" rows="3" class="w-full bg-zinc-900 border border-zinc-800 p-3 text-xs outline-none focus:border-orange-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[9px] uppercase tracking-[0.3em] font-bold text-zinc-500 mb-1">Class_Grade</label>
+                        <input type="text" id="edit-class" class="w-full bg-zinc-900 border border-zinc-800 p-3 text-xs outline-none focus:border-orange-500" />
+                    </div>
+                    <div>
+                        <label class="block text-[9px] uppercase tracking-[0.3em] font-bold text-zinc-500 mb-1">Subject_Vector</label>
+                        <input type="text" id="edit-subject" class="w-full bg-zinc-900 border border-zinc-800 p-3 text-xs outline-none focus:border-orange-500" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[9px] uppercase tracking-[0.3em] font-bold text-zinc-500 mb-1">Material_Type</label>
+                    <select id="edit-type" class="w-full bg-zinc-900 border border-zinc-800 p-3 text-xs outline-none focus:border-orange-500">
+                        <option value="Notes">Notes</option>
+                        <option value="Practice Paper">Practice Paper</option>
+                        <option value="PYQ">Previous Year Question Paper (PYQ)</option>
+                    </select>
+                </div>
+
+                <div class="pt-4 flex gap-4">
+                    <button type="button" onclick="closeEditModal()" class="flex-1 py-4 border border-zinc-800 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all">Cancel</button>
+                    <button type="submit" class="flex-1 py-4 bg-orange-500 text-black text-[10px] font-black uppercase tracking-widest hover:bg-orange-400 transition-all">Update_Registry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="/js/admin-dashboard.js"></script>
+</body>
+</html>

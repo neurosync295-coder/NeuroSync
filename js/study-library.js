@@ -15,41 +15,50 @@ export async function loadStudyMaterials() {
     const user = session?.user;
 
     // Default to class 10 if not found in profile
-    let userClass = 10;
+    let userClass = "Class 10";
     if (user) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('class_grade')
         .eq('id', user.id)
         .single();
-      if (profile?.class_grade) userClass = parseInt(profile.class_grade);
+      if (profile?.class_grade) {
+          const grade = profile.class_grade.toString();
+          userClass = grade.startsWith('Class') ? grade : `Class ${grade}`;
+          // Fallback normalization for legacy "10th" style
+          if (grade.endsWith('th')) userClass = `Class ${grade.replace('th', '')}`;
+      }
     }
 
     showLoadingSpinner('#materials-container');
 
-    // Load materials structure from JSON file
-    await loadMaterialsStructure(userClass);
+    // Fetch dynamic structure from Supabase
+    // We use .in() to handle both "Class 10" and legacy "10th" formats during the migration
+    const classVariants = [userClass];
+    if (userClass.startsWith('Class ')) {
+        classVariants.push(userClass.replace('Class ', '') + 'th');
+    }
 
+    const { data: approvedMaterials, error } = await supabase
+        .from('study_materials')
+        .select('subject')
+        .eq('status', 'approved')
+        .in('class_level', classVariants);
+
+    if (error) throw error;
+
+    // Group by subject to build the legacy materialsStructure-like object
+    const subjects = {};
+    (approvedMaterials || []).forEach(m => {
+        if (!subjects[m.subject]) subjects[m.subject] = {};
+    });
+
+    materialsStructure[userClass] = subjects;
     displayLocalMaterials(userClass);
 
   } catch (error) {
     console.error('Error loading study materials:', error);
-    showNotification('Failed to load study materials.', 'error');
-  }
-}
-
-// Load materials structure from JSON file based on user class
-async function loadMaterialsStructure(userClass) {
-  try {
-    const response = await fetch(`../assets/Study Library/class${userClass}.json`);
-    if (!response.ok) {
-      throw new Error(`Failed to load materials for class ${userClass}`);
-    }
-    const data = await response.json();
-    materialsStructure[userClass] = data;
-  } catch (error) {
-    console.error('Error loading materials structure:', error);
-    showNotification('Failed to load materials structure.', 'error');
+    showNotification('Neural Library Sync Failed.', 'error');
   }
 }
 
@@ -203,7 +212,7 @@ export function searchMaterials() {
   if (!searchInput) return;
   const query = searchInput.value.toLowerCase();
 
-  const allCards = document.querySelectorAll('#materials-container > div, #community-grid > div');
+  const allCards = document.querySelectorAll('#materials-container > div');
 
   allCards.forEach(card => {
     const title = card.querySelector('h3')?.textContent.toLowerCase() || '';

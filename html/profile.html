@@ -19,6 +19,7 @@
   <script src="/js/sidemenu.js"></script>
   <script src="/js/theme.js"></script>
   <script src="/js/navbar-component.js"></script>
+  <script type="module" src="/js/auth-guard.js"></script>
 </head>
 
 <body class="bg-primary dark">
@@ -124,12 +125,19 @@
                     / Cycle</label>
                 </div>
 
-                <!-- Brutalist Input 4 -->
+                <!-- Brutalist Select: Class -->
                 <div class="relative group">
-                  <input type="text" id="classGrade" readonly placeholder=" "
-                    class="block w-full bg-transparent border-0 border-b border-border-raw text-text-primary text-xl px-0 py-3 appearance-none focus:outline-none focus:ring-0 focus:border-accent peer readonly:text-text-muted transition-colors">
+                  <select id="classGrade" disabled
+                    class="block w-full bg-transparent border-0 border-b border-border-raw text-text-primary text-xl px-0 py-3 appearance-none focus:outline-none focus:ring-0 focus:border-accent peer disabled:text-text-muted transition-colors cursor-pointer">
+                    <option value="" class="bg-primary text-text-primary" disabled selected>Select Class</option>
+                    <option value="Class 9" class="bg-primary text-text-primary">Class 9</option>
+                    <option value="Class 10" class="bg-primary text-text-primary">Class 10</option>
+                    <option value="Class 11" class="bg-primary text-text-primary">Class 11</option>
+                    <option value="Class 12" class="bg-primary text-text-primary">Class 12</option>
+                  </select>
                   <label for="classGrade"
-                    class="absolute text-xs uppercase font-bold tracking-widest text-text-muted duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-accent peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Designation</label>
+                    class="absolute text-xs uppercase font-bold tracking-widest text-text-muted duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-accent peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Class
+                    Level</label>
                 </div>
 
                 <!-- Brutalist Select -->

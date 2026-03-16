@@ -21,6 +21,51 @@ body {
   color: var(--text-primary);
   font-family: 'Space Grotesk', sans-serif;
   overflow-x: hidden;
+  position: relative;
+}
+
+/* Global Scan-line Texture */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.012) 2px,
+      rgba(255, 255, 255, 0.012) 4px);
+  pointer-events: none;
+  z-index: 100;
+}
+
+@keyframes scan {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(500%);
+  }
+}
+
+@keyframes scan_reverse {
+  from {
+    transform: translateX(500%);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes progress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 
 /* Typography Scale */
@@ -34,6 +79,33 @@ body {
   z-index: -1;
   pointer-events: none;
   user-select: none;
+  transition: transform 0.1s linear;
+}
+
+.text-mega::before {
+  content: "FOCUS";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--accent-signal);
+  opacity: 0;
+  z-index: -1;
+}
+
+.glitch-active .text-mega::before {
+  opacity: 0.1;
+  animation: mega-glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+}
+
+@keyframes mega-glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-5px, 5px); }
+  40% { transform: translate(-5px, -5px); }
+  60% { transform: translate(5px, 5px); }
+  80% { transform: translate(5px, -5px); }
+  100% { transform: translate(0); }
 }
 
 .heading-xl {
@@ -126,6 +198,27 @@ body {
 .fragment-card:hover {
   border-color: var(--accent-signal);
   transform: scale(1.02) translateY(-10px);
+  background: rgba(249, 115, 22, 0.03);
+}
+
+.fragment-card:hover::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(90deg, transparent, var(--accent-signal), transparent);
+  height: 1px;
+  top: -1px;
+  animation: card-scan 2s linear infinite;
+}
+
+@keyframes card-scan {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* Focus Ring (Timer) */
@@ -158,6 +251,78 @@ body {
   stroke-width: 4;
   stroke-linecap: square;
   transition: stroke-dashoffset 0.5s linear;
+  filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.4));
+}
+
+/* Technical Telemetry Components */
+.telemetry-label {
+  font-family: 'Space Grotesk', monospace;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.telemetry-value {
+  color: var(--accent-signal);
+  font-weight: 700;
+}
+
+.status-bar-wrap {
+  width: 100px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.status-bar-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--accent-signal);
+  width: 65%;
+  /* Dynamic mockup */
+  animation: telemetry-pulse 2s infinite ease-in-out;
+}
+
+@keyframes telemetry-pulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.signal-bar {
+  width: 3px;
+  height: 24px;
+  background: var(--accent-signal);
+  display: block;
+}
+
+/* Pro Max HUD Brackets */
+.hud-bracket {
+  opacity: 0.3;
+  transition: all 0.5s ease;
+  animation: hud-pulse 4s infinite alternate ease-in-out;
+}
+
+@keyframes hud-pulse {
+  0% { opacity: 0.2; transform: scale(1); }
+  100% { opacity: 0.5; transform: scale(1.05); }
+}
+
+#neural-web-canvas {
+  filter: blur(1px);
 }
 
 /* Animations */
@@ -693,6 +858,15 @@ body.focus-mode #fullscreen-btn span {
 .focus-mode-modal.show {
   opacity: 1;
   visibility: visible;
+}
+
+#activity-relay {
+  background: linear-gradient(180deg, #0A0A0B 0%, #0D0D0E 100%);
+}
+
+#activity-logs-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
 .focus-mode-modal-content {

@@ -7,7 +7,7 @@ let materialsStructure = {};
 export async function initSubjectDetails() {
   const urlParams = new URLSearchParams(window.location.search);
   const subject = urlParams.get('subject');
-  const userClass = urlParams.get('class') || 10;
+  const userClass = urlParams.get('class') || "Class 10";
 
   if (!subject) {
     showNotification('No subject specified.', 'error');
@@ -45,29 +45,35 @@ export async function loadSubjectDetails(subject, userClass, user) {
   try {
     showLoadingSpinner('#files-container');
 
-    // Load materials structure from JSON file
-    await loadMaterialsStructure(userClass);
+    // Fetch dynamic data from Supabase
+    const classVariants = [userClass];
+    if (userClass.toString().startsWith('Class ')) {
+        classVariants.push(userClass.replace('Class ', '') + 'th');
+    }
 
+    const { data: approvedFiles, error } = await supabase
+        .from('study_materials')
+        .select('*')
+        .eq('status', 'approved')
+        .in('class_level', classVariants)
+        .eq('subject', subject);
+
+    if (error) throw error;
+
+    // Group by material_type to build the legacy materialsStructure-like object
+    const types = {};
+    (approvedFiles || []).forEach(f => {
+        const type = f.material_type || 'General';
+        if (!types[type]) types[type] = [];
+        types[type].push(f);
+    });
+
+    materialsStructure[userClass] = { [subject]: types };
     displaySubjectFiles(subject, userClass, user);
 
   } catch (error) {
     console.error('Error loading subject details:', error);
-    showNotification('Failed to load subject details.', 'error');
-  }
-}
-
-// Load materials structure from JSON file based on user class
-async function loadMaterialsStructure(userClass) {
-  try {
-    const response = await fetch(`../assets/Study Library/class${userClass}.json`);
-    if (!response.ok) {
-      throw new Error(`Failed to load materials for class ${userClass}`);
-    }
-    const data = await response.json();
-    materialsStructure[userClass] = data;
-  } catch (error) {
-    console.error('Error loading materials structure:', error);
-    showNotification('Failed to load materials structure.', 'error');
+    showNotification('Neural Archive Sync Failed.', 'error');
   }
 }
 
@@ -181,6 +187,12 @@ function displaySubjectFiles(subject, userClass, user) {
     container.appendChild(sectionDiv);
   });
 
+  // Update file count in header
+  const countEl = document.getElementById('file-count');
+  if (countEl) {
+      countEl.textContent = `${totalFiles} NODES_SYNCED`;
+  }
+
   // Search Logic
   setupSearch(container);
 
@@ -204,22 +216,16 @@ export function toggleFolder(headerBtn) {
 }
 
 function generateFileCard(file, userClass, subject, sub, subSub, index, user) {
-  const fileExt = file.split('.').pop().toUpperCase();
-  const fileName = file.replace(/\.[^/.]+$/, "");
-  const fileId = `${userClass}-${subject}-${sub}-${subSub ? subSub + '-' : ''}${file}`.replace(/\s+/g, '-');
-  const path = subSub
-    ? `../assets/Study Library/class ${userClass}/${subject}/${sub}/${subSub}/${file}`
-    : `../assets/Study Library/class ${userClass}/${subject}/${sub}/${file}`;
+  const fileExt = (file.file_path || '').split('.').pop().toUpperCase();
+  const fileName = file.title || 'Untitled_Node';
+  const fileId = file.id;
+  const path = file.file_url || '';
 
   const isAlt = index % 2 === 1;
-  const safeFileId = fileId.replace(/\./g, '-');
+  const safeFileId = fileId.toString().replace(/\./g, '-');
 
   // Initialize likes
   initLikeButton(fileId, user);
-
-  // We return the HTML but we will use textContent for the actual sensitive parts later if possible
-  // However, for performance and simplicity in this specific architecture, we'll use a safer template.
-  // Note: fileName and subject come from local JSON, but we'll treat them as untrusted.
 
   return `
     <div class="file-card group relative p-10 border-2 border-white transition-all duration-300 flex flex-col justify-between h-full min-h-[340px] cursor-default
@@ -237,13 +243,13 @@ function generateFileCard(file, userClass, subject, sub, subSub, index, user) {
               style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
               data-text-filename="${fileName.replace(/"/g, '&quot;')}">${fileName.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</h5>
           <div class="flex items-center gap-2 mb-8">
-            <span class="text-[40px] grayscale contrast-125">${getFileIcon(file.split('.').pop().toLowerCase())}</span>
+            <span class="text-[40px] grayscale contrast-125">${getFileIcon(fileExt.toLowerCase())}</span>
           </div>
         </div>
 
         <div class="mt-8 pt-8 border-t-2 ${isAlt ? 'border-black/10' : 'border-white/10'} flex flex-col gap-4">
           <div class="flex gap-2">
-            <button onclick="window.viewMaterial('${path.replace(/'/g, "\\'")}', '${file.replace(/'/g, "\\'")}')"
+            <button onclick="window.viewMaterial('${path.replace(/'/g, "\\'")}', '${fileName.replace(/'/g, "\\'")}')"
                     class="bg-black text-white px-4 py-3 flex-1 text-[9px] font-black uppercase tracking-widest hover:bg-red-600 transition-all ${isAlt ? '' : 'border border-white/20'}">
               INSPECT
             </button>
@@ -254,7 +260,7 @@ function generateFileCard(file, userClass, subject, sub, subSub, index, user) {
               <span class="like-count">...</span>
             </button>
           </div>
-          <button onclick="window.downloadMaterial('${path.replace(/'/g, "\\'")}', '${file.replace(/'/g, "\\'")}')"
+          <button onclick="window.downloadMaterial('${path.replace(/'/g, "\\'")}', '${fileName.replace(/'/g, "\\'")}')"
                   class="w-full bg-red-600 text-black py-3 text-[9px] font-black uppercase tracking-widest hover:bg-white border-2 border-red-600 hover:border-white transition-all">
             SYNCHRONIZE_DATA
           </button>

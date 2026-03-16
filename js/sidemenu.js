@@ -14,11 +14,25 @@ window.initSideMenuInteractivity = () => {
     setupSupabaseProfileUpdate();
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Root-relative paths for subdomain stability
-    const htmlPfx = '/html/';
+// Global Sign Out Handler
+window.signOut = async () => {
+    console.log('[SideMenu] Sign Out Triggered');
+    try {
+        const { supabase } = await import('/js/supabase.js');
+        await supabase.auth.signOut();
+    } catch (error) {
+        console.error('[SideMenu] Error signing out:', error);
+    } finally {
+        // Redirect to landing page instead of auth page
+        window.location.href = '/index.html';
+    }
+};
 
-    // 2. Define the Side Menu HTML
+// Core Rendering Logic
+const renderSideMenu = () => {
+    if (document.getElementById('side-menu')) return; // Already rendered
+
+    const htmlPfx = '/html/';
     const sideMenuHTML = `
         <aside id="side-menu" class="fixed top-0 left-0 h-full w-64 z-50 transition-all duration-300 -translate-x-full">
             <div class="p-6 h-full flex flex-col relative">
@@ -86,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <div id="menu-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm opacity-0 invisible transition-opacity duration-300 z-40"></div>
     `;
 
-    // 2. Inject Sidebar if target container exists or prepend to body
     let container = document.getElementById('side-menu-container');
     if (!container) {
         container = document.createElement('div');
@@ -94,19 +107,43 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.prepend(container);
     }
     container.innerHTML = sideMenuHTML;
-
-    // 3. Highlight Active Link
     highlightActiveLink();
+    
+    // Attempt interactivity setup if we have a navbar or after fallback
+    if (window.initSideMenuInteractivity) {
+        window.initSideMenuInteractivity();
+    }
+};
 
-    // DO NOT initialize interactivity here locally; 
-    // Wait for the Navbar to call window.initSideMenuInteractivity()
-    // However, if the Navbar component doesn't load after some time, 
-    // or if this page doesn't have a navbar, we trigger it as a fallback.
+const removeSideMenu = () => {
+    const sideMenu = document.getElementById('side-menu');
+    const overlay = document.getElementById('menu-overlay');
+    const trigger = document.getElementById('side-menu-hover-trigger');
+    
+    if (sideMenu) sideMenu.remove();
+    if (overlay) overlay.remove();
+    if (trigger) trigger.remove();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Initial Auth Check for rendering
+    const importPath = '/js/supabase.js';
+    import(importPath).then(({ supabase }) => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) {
+                console.log('[SideMenu] Session detected. Rendering menu.');
+                renderSideMenu();
+            } else {
+                console.log('[SideMenu] No session. Skipping render.');
+            }
+        });
+    });
+
+    // Fallback trigger for interactivity in case render happens late
     setTimeout(() => {
-        if (!window.sideMenuInteractivityInited) {
+        if (!window.sideMenuInteractivityInited && document.getElementById('side-menu')) {
             console.log('[SideMenu] Fallback Interactivity Init');
             window.initSideMenuInteractivity();
-            window.sideMenuInteractivityInited = true;
         }
     }, 1500);
 });
@@ -215,12 +252,10 @@ function setupSupabaseProfileUpdate() {
         const { session, supabase } = e.detail;
         console.log('[SideMenu] Received Auth Update Event');
         if (session?.user) {
+            renderSideMenu(); // Ensure menu exists
             updateSidebarFromSupabase(supabase, session.user);
         } else {
-            const sideName = document.getElementById('side-name');
-            if (sideName) sideName.textContent = 'Guest';
-            const sideClass = document.getElementById('side-class-role');
-            if (sideClass) sideClass.textContent = 'Not Connected';
+            removeSideMenu(); // Remove menu if logged out
         }
     });
 
@@ -230,17 +265,16 @@ function setupSupabaseProfileUpdate() {
         // Only run if navbar hasn't handled it after 1.5s
         setTimeout(() => {
             const sideName = document.getElementById('side-name');
-            if (sideName && sideName.textContent === 'Loading...') {
-                console.log('[SideMenu] Running Fallback Supabase Check');
-                supabase.auth.getSession().then(({ data: { session } }) => {
-                    if (session?.user) {
-                        updateSidebarFromSupabase(supabase, session.user);
-                    } else {
-                        sideName.textContent = 'Guest';
-                    }
-                });
-            }
-        }, 1600);
+            // If side-name exists, we are already rendering; if it doesn't, check if we SHOULD render
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session?.user) {
+                    renderSideMenu();
+                    updateSidebarFromSupabase(supabase, session.user);
+                } else {
+                    removeSideMenu();
+                }
+            });
+        }, 2000);
     });
 }
 
@@ -297,9 +331,9 @@ async function updateSidebarFromSupabase(supabase, user) {
                 nav.insertBefore(teacherLink, nav.children[1]);
                 highlightActiveLink();
             }
-            if (p.role === 'Admin' && !document.querySelector('a[href="feedback-admin.html"]')) {
+            if (p.role === 'Admin' && !document.querySelector('a[href="admin.html"]')) {
                 const adminLink = document.createElement('a');
-                adminLink.href = 'feedback-admin.html';
+                adminLink.href = 'admin.html';
                 adminLink.className = 'nav-item';
 
                 const icon = document.createElement('span');
@@ -307,7 +341,7 @@ async function updateSidebarFromSupabase(supabase, user) {
                 icon.textContent = 'admin_panel_settings';
 
                 const text = document.createElement('span');
-                text.textContent = 'Admin Panel';
+                text.textContent = 'Admin Hub';
 
                 adminLink.appendChild(icon);
                 adminLink.appendChild(text);

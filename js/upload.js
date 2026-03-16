@@ -99,7 +99,7 @@ export function initUploadPage() {
             const fileName = `${user.id}/${Date.now()}_${selectedFile.name.replace(/[^a-z0-9]/gi, '_')}.${fileExt}`;
 
             const { error: uploadError } = await supabase.storage
-                .from('study-materials')
+                .from('study-library')
                 .upload(fileName, selectedFile);
 
             if (uploadError) throw new Error(`Storage Breach: ${uploadError.message}`);
@@ -108,7 +108,7 @@ export function initUploadPage() {
             updateProgress(75, "Synchronizing Metadata...");
 
             // Get Public URL for the file_url column
-            const { data: { publicUrl } } = supabase.storage.from('study-materials').getPublicUrl(fileName);
+            const { data: { publicUrl } } = supabase.storage.from('study-library').getPublicUrl(fileName);
 
             const { error: dbError } = await supabase
                 .from('study_materials')
@@ -130,16 +130,15 @@ export function initUploadPage() {
 
             if (dbError) {
                 // Rollback storage
-                await supabase.storage.from('study-materials').remove([fileName]);
+                await supabase.storage.from('study-library').remove([fileName]);
                 throw new Error(`Database Rejection: ${dbError.message} (Code: ${dbError.code})`);
             }
 
             // 4. Rewards
-            updateProgress(90, "Synthesizing XP Rewards...");
-            try {
-                const { updateRewards } = await import('./rewards.js');
-                await updateRewards(user.id, 10);
-            } catch (p) { console.warn("Reward Sync Failed", p); }
+            updateProgress(90, "Registering submission...");
+            // XP is now awarded upon admin APPROVAL in admin-dashboard.js
+            // This prevents reward spam and incentivizes quality content.
+            console.log("[Upload] Material submitted. Reward pending admin validation.");
 
             updateProgress(100, "Protocol Success.");
             setTimeout(() => {

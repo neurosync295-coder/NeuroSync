@@ -78,6 +78,63 @@ function applyTheme(theme) {
         document.documentElement.classList.remove('theme-light');
     }
 
+    // === Global NeuroSync Loader Injection ===
+    const injectLoader = () => {
+        const loaderHTML = `
+            <div id="ns-global-loader" class="ns-loader-overlay">
+                <div class="ns-loader-brain-container">
+                    <span class="material-symbols-outlined ns-loader-brain">psychology</span>
+                    <div class="ns-loader-scan"></div>
+                </div>
+                <div class="ns-loader-telemetry">
+                    <span class="ns-loader-label">Init_NeuroSync_Protocol</span>
+                    <div class="ns-loader-status" id="ns-loader-status-text">INITIALIZING_UPLINK...</div>
+                </div>
+                <div class="ns-loader-progress-wrap">
+                    <div class="ns-loader-progress-bar"></div>
+                </div>
+            </div>
+        `;
+        const div = document.createElement('div');
+        div.innerHTML = loaderHTML;
+        document.body.prepend(div.firstElementChild);
+
+        // Status text cycling
+        const statusText = document.getElementById('ns-loader-status-text');
+        const phrases = [
+            "INITIALIZING_NEURAL_LINK...",
+            "BUFFERING_SYNAPTIC_DATA...",
+            "ESTABLISHING_LNR_CONNECTION...",
+            "SYNCING_COLLECTIVE_ARCHIVE...",
+            "READY_FOR_NEURAL_UPLINK"
+        ];
+        let i = 0;
+        const interval = setInterval(() => {
+            if (statusText) {
+                statusText.textContent = phrases[i];
+                i = (i + 1) % phrases.length;
+            }
+        }, 800);
+
+        // Window load listener to hide loader
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('ns-global-loader');
+                if (loader) {
+                    loader.classList.add('hidden');
+                    clearInterval(interval);
+                    setTimeout(() => loader.remove(), 1000);
+                }
+            }, 1500); // Minimum visibility time for aesthetic impact
+        });
+    };
+
+    if (document.body) {
+        injectLoader();
+    } else {
+        document.addEventListener('DOMContentLoaded', injectLoader);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         // Full variable + class apply once DOM is ready
         applyTheme(saved);
