@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const earnedXpDisplay = document.getElementById('earned-xp');
   const victoryParticles = document.getElementById('victory-particles');
 
-  let selectedTime = 25 * 60;
+  let selectedTime = 15 * 60;
   let timeLeft = selectedTime;
   let isRunning = false;
   let timerInterval;
@@ -91,20 +91,55 @@ document.addEventListener('DOMContentLoaded', function () {
     xpProgressBar.style.width = `${progressPercent}%`;
   }
 
-  function addXp(minutesCompleted) {
-    const earned = minutesCompleted * XP_PER_MINUTE;
-    xp += earned;
+  async function addXp(minutesCompleted) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    
+    // Determine activity type based on minutes
+    let activityType = 'focus';
+    if (minutesCompleted === 15) activityType = 'focus_15';
+    else if (minutesCompleted === 30) activityType = 'focus_30';
+    else if (minutesCompleted === 45) activityType = 'focus_45';
+    else if (minutesCompleted === 60) activityType = 'focus_60';
 
-    const nextXp = getXpForNextLevel(level);
-    if (xp >= nextXp) {
-      level++;
-      xp = xp - nextXp; // carry over
+    if (user) {
+      const { updateRewards } = await import('./rewards.js');
+      const result = await updateRewards(user.id, activityType);
+      
+      if (result.success) {
+        // Sync local storage and UI with what backend says (optional, but keep it for immediate feel)
+        // Note: The RPC returns total_points and level, we could use those directly
+        // But for consistency with the rest of the file's XP logic:
+        const earned = result.pointsAdded;
+        xp += earned;
+        
+        // Ensure level up is handled locally too for immediate feedback
+        const nextXp = getXpForNextLevel(level);
+        if (xp >= nextXp) {
+          level++;
+          xp = xp - nextXp;
+        }
+        
+        localStorage.setItem('neurosync_xp', xp);
+        localStorage.setItem('neurosync_level', level);
+        updateXpUI();
+        return earned;
+      }
+    } else {
+      // Fallback for anonymous users or if sync fails
+      const earned = minutesCompleted * XP_PER_MINUTE;
+      xp += earned;
+      const nextXp = getXpForNextLevel(level);
+      if (xp >= nextXp) {
+        level++;
+        xp = xp - nextXp;
+      }
+      localStorage.setItem('neurosync_xp', xp);
+      localStorage.setItem('neurosync_level', level);
+      updateXpUI();
+      return earned;
     }
-
-    localStorage.setItem('neurosync_xp', xp);
-    localStorage.setItem('neurosync_level', level);
-    updateXpUI();
-    return earned;
+    return 0;
   }
 
   updateXpUI();

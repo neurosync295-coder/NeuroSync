@@ -227,7 +227,7 @@
           
           <div class="relative z-10 flex flex-col items-center justify-center h-full">
             <div id="quest-status" class="text-[12px] tracking-[0.3em] uppercase text-arcane-electric mb-2 font-bold drop-shadow-lg">AWAITING CHANNELING</div>
-            <div id="timer-display" class="text-7xl font-bold tracking-tighter mb-2 text-arcane-gold drop-shadow-glow filter drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]" style="font-family: 'Story Script', cursive;">25:00</div>
+            <div id="timer-display" class="text-7xl font-bold tracking-tighter mb-2 text-arcane-gold drop-shadow-glow filter drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]" style="font-family: 'Story Script', cursive;">15:00</div>
           </div>
 
           <!-- Victory particles hidden by default -->
@@ -247,17 +247,17 @@
         </div>
 
         <div class="flex flex-wrap justify-center gap-4 max-w-lg mx-auto mb-16">
-          <button class="quest-scroll" onclick="setTimer(15)">
-            <span class="scroll-icon">📜</span> 15m
-          </button>
-          <button class="quest-scroll active-scroll" onclick="setTimer(25)">
-             <span class="scroll-icon">📜</span> 25m
+          <button class="quest-scroll active-scroll" onclick="setTimer(15)">
+            <span class="scroll-icon">📜</span> 15 Min
           </button>
           <button class="quest-scroll" onclick="setTimer(30)">
-             <span class="scroll-icon">📜</span> 30m
+             <span class="scroll-icon">📜</span> 30 Min
           </button>
           <button class="quest-scroll" onclick="setTimer(45)">
-             <span class="scroll-icon">📜</span> 45m
+             <span class="scroll-icon">📜</span> 45 Min
+          </button>
+          <button class="quest-scroll" onclick="setTimer(60)">
+             <span class="scroll-icon">📜</span> 1 Hr
           </button>
         </div>
 

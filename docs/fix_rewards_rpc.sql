@@ -34,6 +34,10 @@ BEGIN
     -- Determine points based on type or direct value
     IF activity_type = 'mood' THEN points_to_add := 5;
     ELSIF activity_type = 'focus' THEN points_to_add := 20;
+    ELSIF activity_type = 'focus_15' THEN points_to_add := 5;
+    ELSIF activity_type = 'focus_30' THEN points_to_add := 15;
+    ELSIF activity_type = 'focus_45' THEN points_to_add := 30;
+    ELSIF activity_type = 'focus_60' THEN points_to_add := 50;
     ELSIF activity_type = 'approval' THEN points_to_add := 10;
     -- Handle numeric strings (legacy/direct call)
     ELSIF activity_type ~ '^[0-9]+$' THEN points_to_add := activity_type::INTEGER;
