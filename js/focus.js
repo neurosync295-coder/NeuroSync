@@ -3,7 +3,11 @@ import { updateRewards } from './rewards.js';
 
 // Focus session variables
 let currentSessionId = null;
-let remainingSeconds = 25 * 60;
+let sessionDurationSeconds = 25 * 60;
+let remainingSeconds = sessionDurationSeconds;
+let isSessionRunning = false;
+let sessionInterval = null;
+let sessionStartTime = null;
 
 // Initialize focus functionality
 export function initFocusTimer() {
@@ -12,13 +16,16 @@ export function initFocusTimer() {
   const resetBtn = document.getElementById('reset-btn');
   const focusModeBtn = document.getElementById('focus-mode-toggle');
   const exitFocusBtn = document.getElementById('exit-focus-btn');
-  const questStatus = document.getElementById('quest-status-dashboard');
 
-  if (!startBtn || !pauseBtn || !resetBtn) return;
+  if (!startBtn || !pauseBtn || !resetBtn) {
+    console.warn('Timer buttons not found');
+    return;
+  }
 
   startBtn.addEventListener('click', startFocusSession);
   pauseBtn.addEventListener('click', pauseFocusSession);
   resetBtn.addEventListener('click', resetFocusSession);
+  
   if (focusModeBtn) focusModeBtn.addEventListener('click', toggleFocusMode);
   if (exitFocusBtn) exitFocusBtn.addEventListener('click', toggleFocusMode);
 
@@ -36,6 +43,26 @@ export function initFocusTimer() {
 
   updateTimerDisplay();
   updateProgress();
+
+  // Handle immediate update when entering fullscreen
+  document.addEventListener('fullscreenchange', () => {
+    try {
+      if (document.fullscreenElement) {
+          console.log('Entered Fullscreen, syncing Flip Clock...');
+          const m = Math.floor(remainingSeconds / 60);
+          const s = remainingSeconds % 60;
+          updateFlipClock(m, s);
+          
+          // Auto-start if not already running (User Expectation)
+          if (!isSessionRunning) {
+              console.log('Auto-starting Focus Session...');
+              startFocusSession().catch(err => console.error('Auto-start failed:', err));
+          }
+      }
+    } catch (e) {
+      console.error('Error in fullscreenchange listener:', e);
+    }
+  });
 }
 
 export function setSessionDuration(minutes) {
@@ -70,6 +97,8 @@ function toggleFocusMode() {
 async function startFocusSession() {
   const { data: { session } } = await supabase.auth.getSession();
   const user = session?.user;
+
+  console.log('Attempting to start focus session...', { user: user?.id, isRunning: isSessionRunning });
 
   if (!user) {
     showNotification('Please log in to start a focus session.', 'error');
@@ -109,10 +138,13 @@ async function startFocusSession() {
   }
 
   // Update UI
-  document.getElementById('start-btn').style.display = 'none';
-  document.getElementById('pause-btn').style.display = 'flex';
+  const startBtn = document.getElementById('start-btn');
+  const pauseBtn = document.getElementById('pause-btn');
+  if (startBtn) startBtn.style.display = 'none';
+  if (pauseBtn) pauseBtn.style.display = 'flex';
 
   sessionInterval = setInterval(updateSessionProgress, 1000);
+  console.log('Session interval started:', sessionInterval);
   showNotification(currentSessionId ? 'Resuming focus...' : 'Focus session started!', 'success');
 }
 
@@ -121,9 +153,11 @@ function pauseFocusSession() {
   if (!isSessionRunning) return;
   clearInterval(sessionInterval);
   isSessionRunning = false;
-  document.getElementById('start-btn').style.display = 'flex';
-  document.getElementById('pause-btn').style.display = 'none';
-  const questStatus = document.getElementById('quest-status-dashboard');
+  const startBtn = document.getElementById('start-btn');
+  const pauseBtn = document.getElementById('pause-btn');
+  if (startBtn) startBtn.style.display = 'flex';
+  if (pauseBtn) pauseBtn.style.display = 'none';
+  const questStatus = document.getElementById('quest-status-dashboard') || document.getElementById('quest-status');
   if (questStatus) questStatus.textContent = 'FOCUS SUSPENDED';
   showNotification('Session paused.', 'info');
 }
@@ -144,12 +178,14 @@ async function resetFocusSession() {
   sessionStartTime = null;
   remainingSeconds = sessionDurationSeconds;
   
-  document.getElementById('start-btn').style.display = 'flex';
-  document.getElementById('pause-btn').style.display = 'none';
-  const questStatus = document.getElementById('quest-status-dashboard');
+  const startBtn = document.getElementById('start-btn');
+  const pauseBtn = document.getElementById('pause-btn');
+  if (startBtn) startBtn.style.display = 'flex';
+  if (pauseBtn) pauseBtn.style.display = 'none';
+  const questStatus = document.getElementById('quest-status-dashboard') || document.getElementById('quest-status');
   if (questStatus) {
       questStatus.textContent = 'AWAITING CHANNELING';
-      questStatus.classList.replace('text-red-500', 'text-arcane-electric');
+      questStatus.classList.replace('text-red-500', 'text-gray-400');
   }
   updateTimerDisplay();
   updateProgress();
@@ -182,10 +218,12 @@ async function completeFocusSession() {
     currentSessionId = null;
     sessionStartTime = null;
 
-    document.getElementById('start-btn').style.display = 'flex';
-    document.getElementById('pause-btn').style.display = 'none';
+    const startBtn = document.getElementById('start-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    if (startBtn) startBtn.style.display = 'flex';
+    if (pauseBtn) pauseBtn.style.display = 'none';
     
-    const questStatus = document.getElementById('quest-status-dashboard');
+    const questStatus = document.getElementById('quest-status-dashboard') || document.getElementById('quest-status');
     if (questStatus) questStatus.textContent = 'QUEST COMPLETE';
     
     const questCompleteSound = document.getElementById('quest-complete-sound');
@@ -220,6 +258,11 @@ function updateTimerDisplay() {
   const s = remainingSeconds % 60;
   display.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
+  // Update Flip Clock if in fullscreen
+  if (document.fullscreenElement) {
+    updateFlipClock(m, s);
+  }
+
   // Update SVG Ring (Mana Bar)
   const focusRingPath = document.getElementById('focus-ring-path-dashboard');
   const questStatus = document.getElementById('quest-status-dashboard');
@@ -233,13 +276,13 @@ function updateTimerDisplay() {
         focusRingPath.classList.add('mana-low');
         if (questStatus) {
             questStatus.textContent = "BATTLING DISTRACTIONS...";
-            questStatus.classList.replace('text-arcane-electric', 'text-red-500');
+            questStatus.classList.replace('text-gray-400', 'text-red-500');
         }
     } else {
         focusRingPath.classList.remove('mana-low');
         if (isSessionRunning && questStatus) {
             questStatus.textContent = "CHANNELING FOCUS...";
-            questStatus.classList.replace('text-red-500', 'text-arcane-electric');
+            questStatus.classList.replace('text-red-500', 'text-gray-400');
         }
     }
   }
@@ -290,4 +333,42 @@ export async function loadFocusStats() {
   } catch (error) {
     console.error('Error loading focus stats:', error);
   }
+}
+
+function updateFlipClock(minutes, seconds) {
+  const mStr = minutes.toString().padStart(2, '0');
+  const sStr = seconds.toString().padStart(2, '0');
+
+  updateFlipCard('min-tens', mStr[0]);
+  updateFlipCard('min-ones', mStr[1]);
+  updateFlipCard('sec-tens', sStr[0]);
+  updateFlipCard('sec-ones', sStr[1]);
+}
+
+function updateFlipCard(cardId, newValue) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+
+  const top = card.querySelector('.flip-card-top span');
+  const bottom = card.querySelector('.flip-card-bottom span');
+  const leafFront = card.querySelector('.flip-card-leaf-front span');
+  const leafBack = card.querySelector('.flip-card-leaf-back span');
+
+  const currentValue = top.textContent;
+
+  if (newValue === currentValue) return;
+
+  // Add flipping class to trigger CSS animation
+  card.classList.add('flipping');
+
+  // Set the values for the flip
+  leafFront.textContent = currentValue;
+  leafBack.textContent = newValue;
+  top.textContent = newValue;
+
+  // After animation ends (0.6s), sync bottom and remove class
+  setTimeout(() => {
+    bottom.textContent = newValue;
+    card.classList.remove('flipping');
+  }, 600);
 }

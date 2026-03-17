@@ -200,15 +200,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Low Mana State (Under 5 minutes remaining, and selected time > 5 min to not trigger instantly on 5m timers)
     if (timeLeft <= 300 && timeLeft > 0 && selectedTime > 300) {
-      focusRingPath.classList.add('mana-low');
-      questStatus.textContent = "BATTLING DISTRACTIONS...";
-      questStatus.classList.replace('text-arcane-electric', 'text-red-500');
+        focusRingPath.classList.add('mana-low');
+        if (questStatus) {
+            questStatus.textContent = "BATTLING DISTRACTIONS...";
+            questStatus.classList.replace('text-gray-400', 'text-red-500');
+        }
     } else {
-      focusRingPath.classList.remove('mana-low');
-      if (isRunning) {
-        questStatus.textContent = "CHANNELING FOCUS...";
-        questStatus.classList.replace('text-red-500', 'text-arcane-electric');
-      }
+        focusRingPath.classList.remove('mana-low');
+        if (isRunning && questStatus) {
+            questStatus.textContent = "CHANNELING FOCUS...";
+            questStatus.classList.replace('text-red-500', 'text-gray-400');
+        }
     }
   }
 
@@ -221,7 +223,8 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.quest-scroll').forEach(btn => {
       btn.classList.remove('active-scroll');
     });
-    event.currentTarget.classList.add('active-scroll');
+    const target = event?.currentTarget || event?.target;
+    if (target) target.classList.add('active-scroll');
   };
 
   function startTimer() {
@@ -232,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function () {
       startBtn.style.display = 'none';
       pauseBtn.style.display = 'flex';
       questStatus.textContent = "CHANNELING FOCUS...";
-      questStatus.classList.replace('text-red-500', 'text-arcane-electric'); // Ensure proper color on restart
+      questStatus.classList.replace('text-red-500', 'text-gray-400'); // Ensure proper color on restart
 
       timerInterval = setInterval(() => {
         timeLeft--;
@@ -266,8 +269,10 @@ document.addEventListener('DOMContentLoaded', function () {
     updateDisplay();
     startBtn.style.display = 'flex';
     pauseBtn.style.display = 'none';
-    questStatus.textContent = "AWAITING CHANNELING";
-    questStatus.classList.replace('text-red-500', 'text-arcane-electric');
+    if (questStatus) {
+      questStatus.textContent = 'AWAITING CHANNELING';
+      questStatus.classList.replace('text-red-500', 'text-gray-400');
+  }
   }
 
   startBtn.addEventListener('click', startTimer);

@@ -5,14 +5,17 @@
  */
 
 :root {
-  --bg-obsidian: #0A0A0B;
-  --bg-graphite: #1E1E20;
+  --bg-obsidian: #0D0D0E;
+  --bg-graphite: #27272A;
   --accent-signal: #F97316;
   --accent-signal-rgb: 249, 115, 22;
   --text-primary: #FAFAFA;
   --text-secondary: #A1A1AA;
   --border-raw: 1px solid #27272A;
   --border-active: 1px solid #F97316;
+  --focus-gold: #F97316;
+  --focus-graphite: #27272A;
+  --focus-obsidian: #0D0D0E;
 }
 
 /* Base Overrides */
@@ -151,18 +154,18 @@ body {
 
 .focus-ring-bg {
   fill: none;
-  stroke: rgba(139, 92, 246, 0.1);
+  stroke: var(--bg-graphite);
   stroke-width: 4;
 }
 
 .focus-ring-path.mana-bar {
   fill: none;
-  stroke: #8b5cf6;
-  /* Arcane Electric Blue/Purple */
+  stroke: var(--focus-gold);
+  /* Signal Orange */
   stroke-width: 6;
   stroke-linecap: square;
   transition: stroke-dashoffset 0.5s linear, stroke 0.3s ease;
-  filter: drop-shadow(0 0 8px #8b5cf6);
+  filter: drop-shadow(0 0 12px rgba(249, 115, 22, 0.6));
 }
 
 /* Low Mana State */
@@ -222,14 +225,17 @@ body {
   justify-content: center;
   width: 64px;
   height: 64px;
-  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  color: #fbbf24;
-  /* Arcane Gold */
+  background: var(--bg-graphite);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  color: var(--focus-gold);
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8), 0 4px 6px rgba(0, 0, 0, 0.5);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   overflow: hidden;
+}
+
+.magical-button .material-symbols-outlined {
+  filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.8));
 }
 
 .magical-button::before {
@@ -246,8 +252,8 @@ body {
 
 .magical-button:hover {
   transform: translateY(-4px) scale(1.05);
-  box-shadow: inset 0 0 15px rgba(139, 92, 246, 0.2), 0 0 20px rgba(139, 92, 246, 0.4);
-  border-color: #fbbf24;
+  box-shadow: inset 0 0 15px rgba(249, 115, 22, 0.2), 0 0 20px rgba(249, 115, 22, 0.4);
+  border-color: var(--focus-gold);
   color: #fff;
 }
 
@@ -321,11 +327,11 @@ body {
 }
 
 .text-arcane-gold {
-  color: #fbbf24;
+  color: #F97316;
 }
 
 .text-arcane-electric {
-  color: #a78bfa;
+  color: #A1A1AA;
 }
 
 .border-arcane-glow {

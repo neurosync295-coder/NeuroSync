@@ -201,14 +201,18 @@
 
     <!-- Redesigned Focus Timer: Arcane Focus Quest -->
     <section id="focus-timer" class="py-32 px-6 relative overflow-hidden bg-arcane-runes">
+      <!-- Fullscreen Toggle -->
+      <button id="fullscreen-toggle-home" class="absolute top-8 right-8 obsidian-button !p-2 grayscale hover:grayscale-0 hover:border-focus-gold hover:text-focus-gold transition-all duration-500 z-50 group" title="Enter Fullscreen">
+        <span class="material-symbols-outlined transition-transform duration-500 group-hover:scale-110">open_in_full</span>
+      </button>
       <div class="max-w-4xl mx-auto text-center reveal-on-scroll">
         <h2 class="heading-xl mb-16 text-arcane-gold drop-shadow-glow" style="font-family: 'Story Script', cursive;">Arcane Focus Quest</h2>
 
-        <div class="focus-ring-container mb-12 relative group">
+        <div class="focus-ring-container mb-12 relative group bg-[#0D0D0E]/40 backdrop-blur-md border border-white/10 fragment-card">
           <!-- Layered Runic Circles -->
           <svg class="focus-ring-svg absolute top-0 left-0 w-full h-full animate-spin-slow opacity-30" viewBox="0 0 300 300">
-             <circle cx="150" cy="150" r="145" fill="none" stroke="var(--focus-purple-dark)" stroke-width="1" stroke-dasharray="4 8" />
-             <polygon points="150,5 295,150 150,295 5,150" fill="none" stroke="var(--focus-purple-glow)" stroke-width="1" opacity="0.5" />
+             <circle cx="150" cy="150" r="145" fill="none" stroke="var(--bg-graphite)" stroke-width="1" stroke-dasharray="4 8" />
+             <polygon points="150,5 295,150 150,295 5,150" fill="none" stroke="var(--focus-gold)" stroke-width="1" opacity="0.5" />
           </svg>
           <svg class="focus-ring-svg absolute top-0 left-0 w-full h-full animate-spin-reverse-slower opacity-50 block" viewBox="0 0 300 300">
              <circle cx="150" cy="150" r="120" fill="none" stroke="var(--focus-gold)" stroke-width="2" stroke-dasharray="10 20 30 40" />
@@ -226,8 +230,8 @@
           </svg>
           
           <div class="relative z-10 flex flex-col items-center justify-center h-full">
-            <div id="quest-status" class="text-[12px] tracking-[0.3em] uppercase text-arcane-electric mb-2 font-bold drop-shadow-lg">AWAITING CHANNELING</div>
-            <div id="timer-display" class="text-7xl font-bold tracking-tighter mb-2 text-arcane-gold drop-shadow-glow filter drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]" style="font-family: 'Story Script', cursive;">15:00</div>
+            <div id="quest-status" class="text-[12px] tracking-[0.3em] uppercase text-gray-400 mb-2 font-bold drop-shadow-lg" style="font-family: 'Space Grotesk', sans-serif;">AWAITING CHANNELING</div>
+            <div id="timer-display" class="text-7xl font-bold tracking-tighter mb-2 text-arcane-gold drop-shadow-glow filter drop-shadow-[0_0_15px_rgba(249,115,22,0.6)]" style="font-family: 'Story Script', cursive;">15:00</div>
           </div>
 
           <!-- Victory particles hidden by default -->
@@ -264,8 +268,8 @@
         <!-- Session Tracking XP Bar -->
         <div class="max-w-md mx-auto bg-gray-900 border-2 border-primary-500/30 p-6 relative overflow-hidden" style="border-image: linear-gradient(to right, #4c1d95, #3b82f6) 1; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);">
            <div class="flex justify-between items-end mb-2 relative z-10">
-              <span class="text-xs font-bold tracking-widest text-[var(--focus-gold)] uppercase">Archmage Level <span id="current-level-display" class="text-lg">1</span></span>
-              <span class="text-[10px] text-gray-400 font-mono"><span id="current-xp-display">0</span> / <span id="next-level-xp-display">1000</span> XP</span>
+              <span class="text-xs font-bold tracking-widest text-[var(--focus-gold)] uppercase" style="font-family: 'Space Grotesk', sans-serif;">Archmage Level <span id="current-level-display" class="text-lg">1</span></span>
+              <span class="text-[10px] text-gray-400 font-mono" style="font-family: 'Space Grotesk', sans-serif;"><span id="current-xp-display">0</span> / <span id="next-level-xp-display">1000</span> XP</span>
            </div>
            <div class="w-full h-3 bg-black relative border border-gray-800 z-10">
               <div id="xp-progress-bar" class="h-full bg-gradient-to-r from-purple-600 to-blue-500 transition-all duration-1000 ease-out" style="width: 0%; box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);"></div>
@@ -553,6 +557,7 @@
   </footer>
 
   <script type="module" src="/js/index.js"></script>
+  <script type="module" src="/js/fullscreen.js"></script>
 </body>
 
 </html>

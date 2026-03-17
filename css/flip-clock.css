@@ -1,0 +1,155 @@
+/* Flip-Clock Animation Styles */
+
+.flip-clock {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    font-family: 'Story Script', cursive;
+    perspective: 1000px;
+}
+
+/* Show flip-clock only in fullscreen */
+:fullscreen .flip-clock {
+    display: flex;
+    height: 70vh; /* Increased height */
+    margin-bottom: 5vh;
+    animation: fade-in 0.8s ease-out forwards;
+}
+
+:fullscreen .focus-controls-container {
+    position: absolute;
+    bottom: 5vh;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    margin-top: 0 !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: auto !important;
+}
+
+/* Hide standard timer UI elements in fullscreen */
+:fullscreen .dashboard-hide-focus,
+:fullscreen .focus-ring-container,
+:fullscreen [data-focus-section] > h2 {
+    display: none !important;
+}
+
+.flip-unit {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.flip-card {
+    position: relative;
+    width: 12vw;
+    height: 18vw;
+    max-width: 180px;
+    max-height: 270px;
+    line-height: 0;
+}
+
+.flip-card-top,
+.flip-card-bottom,
+.flip-card-leaf-front,
+.flip-card-leaf-back {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background-color: #161618;
+    color: #F97316;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 15vw;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+@media (min-width: 1024px) {
+    .flip-card-top, .flip-card-bottom, .flip-card-leaf-front, .flip-card-leaf-back {
+        font-size: 180px;
+    }
+}
+
+.flip-card-top,
+.flip-card-leaf-front {
+    top: 0;
+    border-radius: 8px 8px 0 0;
+    align-items: flex-end;
+}
+
+.flip-card-bottom,
+.flip-card-leaf-back {
+    bottom: 0;
+    border-radius: 0 0 8px 8px;
+    align-items: flex-start;
+}
+
+/* Text alignment for half-digits */
+.flip-card-top span,
+.flip-card-leaf-front span {
+    transform: translateY(50%);
+}
+
+.flip-card-bottom span,
+.flip-card-leaf-back span {
+    transform: translateY(-50%);
+}
+
+.flip-card-leaf {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    z-index: 2;
+    transform-origin: bottom;
+    transition: transform 0.6s ease-in;
+    transform-style: preserve-3d;
+}
+
+.flip-card-leaf-front {
+    z-index: 2;
+    backface-visibility: hidden;
+}
+
+.flip-card-leaf-back {
+    z-index: 1;
+    transform: rotateX(-180deg);
+}
+
+/* Flip Animation trigger */
+.flipping .flip-card-leaf {
+    transform: rotateX(-180deg);
+}
+
+/* Divider line */
+.flip-card::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 5;
+    transform: translateY(-50%);
+}
+
+/* Glow Effect */
+.flip-card {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(249, 115, 22, 0.1);
+}
+
+.flip-card:hover {
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(249, 115, 22, 0.2);
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
