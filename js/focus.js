@@ -8,6 +8,7 @@ let remainingSeconds = sessionDurationSeconds;
 let isSessionRunning = false;
 let sessionInterval = null;
 let sessionStartTime = null;
+let presentTimeInterval = null;
 
 // Initialize focus functionality
 export function initFocusTimer() {
@@ -47,16 +48,30 @@ export function initFocusTimer() {
   // Handle immediate update when entering fullscreen
   document.addEventListener('fullscreenchange', () => {
     try {
+      const presentTimeDisplay = document.getElementById('fullscreen-present-time');
       if (document.fullscreenElement) {
-          console.log('Entered Fullscreen, syncing Flip Clock...');
+          console.log('Entered Fullscreen, syncing Flip Clock and Present Time...');
           const m = Math.floor(remainingSeconds / 60);
           const s = remainingSeconds % 60;
           updateFlipClock(m, s);
+
+          if (presentTimeDisplay) {
+              presentTimeDisplay.classList.remove('hidden');
+              startPresentTimeClock();
+          }
           
           // Auto-start if not already running (User Expectation)
           if (!isSessionRunning) {
               console.log('Auto-starting Focus Session...');
               startFocusSession().catch(err => console.error('Auto-start failed:', err));
+          }
+      } else {
+          if (presentTimeDisplay) {
+              presentTimeDisplay.classList.add('hidden');
+          }
+          if (presentTimeInterval) {
+              clearInterval(presentTimeInterval);
+              presentTimeInterval = null;
           }
       }
     } catch (e) {
@@ -371,4 +386,27 @@ function updateFlipCard(cardId, newValue) {
     bottom.textContent = newValue;
     card.classList.remove('flipping');
   }, 600);
+}
+
+function updatePresentTime() {
+    const clockEl = document.getElementById('current-clock');
+    if (!clockEl) return;
+
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    const hoursStr = hours.toString().padStart(2, '0');
+
+    clockEl.textContent = `${hoursStr}:${minutes}:${seconds} ${ampm}`;
+}
+
+function startPresentTimeClock() {
+    if (presentTimeInterval) return;
+    updatePresentTime();
+    presentTimeInterval = setInterval(updatePresentTime, 1000);
 }
