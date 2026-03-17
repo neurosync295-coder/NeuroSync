@@ -32,148 +32,29 @@ document.addEventListener('DOMContentLoaded', function () {
     if (sprite) {
       sprite.style.transform = `translate(${-moveX}px, ${-moveY}px)`;
     }
-
-    // Dynamic Latency & System Time
-    const latencyVal = document.querySelector('.telemetry-value:last-of-type');
-    const systemTimeEl = document.getElementById('system-time');
-    const megaContainer = document.querySelector('.asymmetric-hero');
-
-    setInterval(() => {
-      // Latency Jitter
-      if (latencyVal && Math.random() > 0.8) {
-        const base = 12;
-        const jitter = Math.random() * 4 - 2;
-        latencyVal.textContent = `${(base + jitter).toFixed(1)}ms`;
-      }
-
-      // System Time Update
-      if (systemTimeEl) {
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('en-GB', { hour12: false });
-        systemTimeEl.textContent = `${timeStr} // SYS_UTC`;
-      }
-
-      // Pro Max Glitch Trigger
-      if (megaContainer && Math.random() > 0.98) {
-        megaContainer.classList.add('glitch-active');
-        setTimeout(() => megaContainer.classList.remove('glitch-active'), 200);
-      }
-    }, 1000);
   });
 
-  // ============ NEURAL WEB ENGINE (PRO MAX) ============
-  const canvas = document.getElementById('neural-web-canvas');
-  if (canvas) {
-    const ctx = canvas.getContext('2d');
-    let points = [];
-    const pointCount = 60;
-    const maxDist = 150;
-    let mouse = { x: null, y: null };
-
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      initPoints();
-    }
-
-    function initPoints() {
-      points = [];
-      for (let i = 0; i < pointCount; i++) {
-        points.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5
-        });
-      }
-    }
-
-    window.addEventListener('mousemove', (e) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-    });
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = 'rgba(249, 115, 22, 0.15)';
-      ctx.lineWidth = 0.5;
-
-      points.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-
-        // Connect to other points
-        points.forEach(p2 => {
-          const dx = p.x - p2.x;
-          const dy = p.y - p2.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < maxDist) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-          }
-        });
-
-        // Connect to mouse
-        if (mouse.x) {
-          const dx = p.x - mouse.x;
-          const dy = p.y - mouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 200) {
-            ctx.strokeStyle = `rgba(249, 115, 22, ${1 - dist / 200})`;
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(mouse.x, mouse.y);
-            ctx.stroke();
-            ctx.strokeStyle = 'rgba(249, 115, 22, 0.15)';
-          }
-        }
-      });
-
-      requestAnimationFrame(draw);
-    }
-
-    window.addEventListener('resize', resize);
-    resize();
-    draw();
-  }
-
-  // ============ HUD SECTOR TRACKING (PRO MAX) ============
-  const hudIndicator = document.getElementById('hud-sector-indicator');
-  if (hudIndicator) {
-    const sections = [
-      { id: 'CORE_01', el: document.querySelector('.asymmetric-hero') },
-      { id: 'STREAM_02', el: document.querySelector('.stream-section') },
-      { id: 'ENGINE_03', el: document.getElementById('focus-timer') },
-      { id: 'VAULT_04', el: document.querySelector('.bg-[#0D0D0E].border-y') },
-      { id: 'RELAY_05', el: document.querySelector('.py-32.px-6:last-of-type') }
-    ];
-
-    window.addEventListener('scroll', () => {
-      const scrollPos = window.scrollY + window.innerHeight / 2;
-      sections.forEach(sec => {
-        if (sec.el) {
-          const top = sec.el.offsetTop;
-          const height = sec.el.offsetHeight;
-          if (scrollPos >= top && scrollPos < top + height) {
-            hudIndicator.textContent = `SECTOR_ID // ${sec.id}`;
-          }
-        }
-      });
-    });
-  }
-
-  // ============ POMODORO ENGINE ============
+  // ============ GAMIFIED POMODORO ENGINE ============
   const timerDisplay = document.getElementById('timer-display');
   const startBtn = document.getElementById('start-btn');
   const pauseBtn = document.getElementById('pause-btn');
   const resetBtn = document.getElementById('reset-btn');
   const focusRingPath = document.getElementById('focus-ring-path');
+  const questStatus = document.getElementById('quest-status');
+
+  // Audio Elements
+  const spellCastSound = document.getElementById('spell-cast-sound');
+  const questCompleteSound = document.getElementById('quest-complete-sound');
+
+  // XP & Level Elements
+  const currentLevelDisplay = document.getElementById('current-level-display');
+  const currentXpDisplay = document.getElementById('current-xp-display');
+  const nextLevelXpDisplay = document.getElementById('next-level-xp-display');
+  const xpProgressBar = document.getElementById('xp-progress-bar');
+  const victoryBanner = document.getElementById('victory-banner');
+  const victoryBannerContent = document.getElementById('victory-banner-content');
+  const earnedXpDisplay = document.getElementById('earned-xp');
+  const victoryParticles = document.getElementById('victory-particles');
 
   let selectedTime = 25 * 60;
   let timeLeft = selectedTime;
@@ -182,14 +63,118 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const RING_CIRCUMFERENCE = 880; // stroke-dasharray value
 
+  // XP System Logic
+  let xp = parseInt(localStorage.getItem('neurosync_xp')) || 0;
+  let level = parseInt(localStorage.getItem('neurosync_level')) || 1;
+  const XP_PER_MINUTE = 10;
+
+  function getXpForNextLevel(currentLevel) {
+    return currentLevel * 1000;
+  }
+
+  function updateXpUI() {
+    currentLevelDisplay.textContent = level;
+    currentXpDisplay.textContent = xp;
+    const nextXp = getXpForNextLevel(level);
+    nextLevelXpDisplay.textContent = nextXp;
+
+    // Previous level requirements calculate the base of the bar
+    let prevLevelXp = level > 1 ? getXpForNextLevel(level - 1) : 0;
+    // For visual progress relative to ONLY this current level gap
+    let xpInCurrentLevel = xp;
+    if (level > 1) {
+      // Simple scale: if level > 1, total XP needed for next level is actually just nextXp. 
+      // We will just show total XP / nextXp ratio for simplicity
+    }
+
+    const progressPercent = Math.min((xp / nextXp) * 100, 100);
+    xpProgressBar.style.width = `${progressPercent}%`;
+  }
+
+  function addXp(minutesCompleted) {
+    const earned = minutesCompleted * XP_PER_MINUTE;
+    xp += earned;
+
+    const nextXp = getXpForNextLevel(level);
+    if (xp >= nextXp) {
+      level++;
+      xp = xp - nextXp; // carry over
+    }
+
+    localStorage.setItem('neurosync_xp', xp);
+    localStorage.setItem('neurosync_level', level);
+    updateXpUI();
+    return earned;
+  }
+
+  updateXpUI();
+
+  function triggerVictory(earned) {
+    if (questCompleteSound) questCompleteSound.play().catch(e => console.log('Audio disabled', e));
+
+    // Particles burst
+    victoryParticles.classList.remove('hidden');
+    for (let i = 0; i < 50; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('golden-particle');
+      particle.style.left = '50%';
+      particle.style.top = '50%';
+
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * 200 + 50;
+      particle.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+      particle.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+
+      particle.style.animationDuration = `${Math.random() * 1 + 0.5}s`;
+      victoryParticles.appendChild(particle);
+    }
+
+    // Cleanup particles
+    setTimeout(() => {
+      victoryParticles.innerHTML = '';
+      victoryParticles.classList.add('hidden');
+    }, 2000);
+
+    // Show Banner
+    earnedXpDisplay.textContent = earned;
+    victoryBanner.classList.remove('opacity-0', 'pointer-events-none');
+    victoryBannerContent.classList.remove('scale-90');
+    victoryBannerContent.classList.add('scale-100');
+
+    // Hide banner on click anywhere
+    const hideBanner = () => {
+      victoryBanner.classList.add('opacity-0', 'pointer-events-none');
+      victoryBannerContent.classList.remove('scale-100');
+      victoryBannerContent.classList.add('scale-90');
+      document.removeEventListener('click', hideBanner);
+    };
+
+    setTimeout(() => {
+      document.addEventListener('click', hideBanner);
+    }, 500);
+  }
+
   function updateDisplay() {
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
     timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-    // Update SVG Ring
+    // Update SVG Ring (Mana Bar)
     const offset = RING_CIRCUMFERENCE - (timeLeft / selectedTime) * RING_CIRCUMFERENCE;
     focusRingPath.style.strokeDashoffset = offset;
+
+    // Low Mana State (Under 5 minutes remaining, and selected time > 5 min to not trigger instantly on 5m timers)
+    if (timeLeft <= 300 && timeLeft > 0 && selectedTime > 300) {
+      focusRingPath.classList.add('mana-low');
+      questStatus.textContent = "BATTLING DISTRACTIONS...";
+      questStatus.classList.replace('text-arcane-electric', 'text-red-500');
+    } else {
+      focusRingPath.classList.remove('mana-low');
+      if (isRunning) {
+        questStatus.textContent = "CHANNELING FOCUS...";
+        questStatus.classList.replace('text-red-500', 'text-arcane-electric');
+      }
+    }
   }
 
   window.setTimer = function (minutes) {
@@ -197,18 +182,23 @@ document.addEventListener('DOMContentLoaded', function () {
     timeLeft = selectedTime;
     resetTimer();
 
-    // Update active button state
-    document.querySelectorAll('.obsidian-button[onclick^="setTimer"]').forEach(btn => {
-      btn.classList.remove('border-[var(--accent-signal)]');
+    // Update active button state (Quest Scrolls)
+    document.querySelectorAll('.quest-scroll').forEach(btn => {
+      btn.classList.remove('active-scroll');
     });
-    event.currentTarget.classList.add('border-[var(--accent-signal)]');
+    event.currentTarget.classList.add('active-scroll');
   };
 
   function startTimer() {
     if (!isRunning) {
+      if (spellCastSound) spellCastSound.play().catch(e => console.log('Audio disabled', e));
+
       isRunning = true;
       startBtn.style.display = 'none';
       pauseBtn.style.display = 'flex';
+      questStatus.textContent = "CHANNELING FOCUS...";
+      questStatus.classList.replace('text-red-500', 'text-arcane-electric'); // Ensure proper color on restart
+
       timerInterval = setInterval(() => {
         timeLeft--;
         updateDisplay();
@@ -217,7 +207,10 @@ document.addEventListener('DOMContentLoaded', function () {
           isRunning = false;
           startBtn.style.display = 'flex';
           pauseBtn.style.display = 'none';
-          alert('Synchronization Complete.');
+          questStatus.textContent = "QUEST COMPLETE";
+
+          const earned = addXp(selectedTime / 60);
+          triggerVictory(earned);
         }
       }, 1000);
     }
@@ -228,6 +221,7 @@ document.addEventListener('DOMContentLoaded', function () {
     isRunning = false;
     startBtn.style.display = 'flex';
     pauseBtn.style.display = 'none';
+    questStatus.textContent = "FOCUS SUSPENDED";
   }
 
   function resetTimer() {
@@ -237,6 +231,8 @@ document.addEventListener('DOMContentLoaded', function () {
     updateDisplay();
     startBtn.style.display = 'flex';
     pauseBtn.style.display = 'none';
+    questStatus.textContent = "AWAITING CHANNELING";
+    questStatus.classList.replace('text-red-500', 'text-arcane-electric');
   }
 
   startBtn.addEventListener('click', startTimer);
@@ -249,130 +245,23 @@ document.addEventListener('DOMContentLoaded', function () {
   document.body.classList.remove('light');
 
   // ============ AUTH STATE SYNC (SUPABASE) ============
-  import('/js/supabase.js').then(async ({ supabase }) => {
-    const { getThresholdForLevel, getLevelName } = await import('./rewards.js');
-    
+  import('./supabase.js').then(({ supabase }) => {
     supabase.auth.onAuthStateChange(async (event, session) => {
       const user = session?.user;
-      const loggedOutActions = document.getElementById('logged-out-actions');
-      const loggedInGreeting = document.getElementById('logged-in-greeting');
-      const userGreetingName = document.getElementById('user-greeting-name');
-      const activityRelay = document.getElementById('activity-relay');
+      const connectBtn = document.querySelector('a[href*="auth.html"]');
 
       if (user) {
-        // Show Logged-In Experience
-        if (loggedOutActions) loggedOutActions.classList.add('hidden');
-        if (loggedInGreeting) {
-          loggedInGreeting.classList.remove('hidden');
-          loggedInGreeting.classList.add('flex');
+        if (connectBtn) {
+          connectBtn.textContent = 'Dashboard';
+          connectBtn.href = 'html/dashboard.html';
         }
-        if (activityRelay) activityRelay.classList.remove('hidden');
-        
-        // Show Evolution Section for logged-in users
-        const evolutionSection = document.getElementById('evolution-section');
-        if (evolutionSection) evolutionSection.classList.remove('hidden');
-
-        // Fetch Profile for Greeting
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('first_name')
-          .eq('id', user.id)
-          .single();
-
-        if (profile && userGreetingName) {
-          userGreetingName.textContent = `Welcome back, ${profile.first_name}`;
-        }
-
-        // Fetch and Update Progression Data
-        loadProgressionData(user.id, supabase, getThresholdForLevel, getLevelName);
-
-        // Load Activity Logs
-        loadRecentActivity(user.id, supabase);
       } else {
-        if (loggedOutActions) loggedOutActions.classList.remove('hidden');
-        if (loggedInGreeting) {
-          loggedInGreeting.classList.add('hidden');
-          loggedInGreeting.classList.remove('flex');
+        if (connectBtn) {
+          connectBtn.textContent = 'Connect';
+          connectBtn.href = 'html/auth.html';
         }
-        if (activityRelay) activityRelay.classList.add('hidden');
-
-        // Hide Evolution Section for guests
-        const evolutionSection = document.getElementById('evolution-section');
-        if (evolutionSection) evolutionSection.classList.add('hidden');
       }
     });
-
-    async function loadProgressionData(userId, supabase, getThreshold, getLevelName) {
-      try {
-        const { data: rewards } = await supabase
-          .from('rewards')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
-
-        if (rewards) {
-          const levelDisplay = document.getElementById('index-level-display');
-          const nextLevelName = document.getElementById('index-next-level-name');
-          const progressBar = document.getElementById('index-evolution-progress');
-
-          const lvl = rewards.avatar_level || 1;
-          const points = rewards.total_points || 0;
-          const currentThreshold = getThreshold(lvl);
-          const nextThreshold = getThreshold(lvl + 1);
-          const progress = ((points - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
-
-          if (levelDisplay) levelDisplay.textContent = `LVL_0${lvl} - ${getLevelName(lvl)}`;
-          if (nextLevelName) nextLevelName.textContent = getLevelName(lvl + 1);
-          if (progressBar) progressBar.style.width = `${Math.min(progress, 100)}%`;
-        }
-      } catch (err) {
-        console.error('Error loading progression data:', err);
-      }
-    }
-
-    async function loadRecentActivity(userId, supabase) {
-      const container = document.getElementById('activity-logs-container');
-      if (!container) return;
-
-      const { data: logs, error } = await supabase
-        .from('activity_logs')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(6);
-
-      if (error) {
-        console.error('Error fetching activity:', error);
-        return;
-      }
-
-      container.innerHTML = '';
-      if (!logs || logs.length === 0) {
-        container.innerHTML = '<div class="p-12 text-center text-secondary col-span-full italic">No synchronization logs found.</div>';
-        return;
-      }
-
-      logs.forEach(log => {
-        const date = new Date(log.created_at).toLocaleDateString();
-        const item = document.createElement('div');
-        item.className = 'bg-[#161618] p-8 border border-[var(--border-raw)] hover:border-accent/40 transition-colors group';
-        item.innerHTML = `
-          <div class="telemetry-label !text-[8px] mb-4 opacity-50 group-hover:opacity-100 transition-opacity">
-            LOG_ID // ${log.id.substring(0, 8).toUpperCase()}
-          </div>
-          <div class="flex items-center gap-4 mb-4">
-            <div class="size-2 bg-accent animate-pulse"></div>
-            <span class="text-xs font-bold tracking-widest uppercase">${log.action}</span>
-          </div>
-          <p class="text-secondary text-[11px] mb-2">${log.target || 'System Operation'}</p>
-          <div class="flex justify-between items-center mt-6">
-            <span class="text-accent text-[10px] font-mono">+${log.points_earned} PTS</span>
-            <span class="text-secondary text-[9px] font-mono">${date}</span>
-          </div>
-        `;
-        container.appendChild(item);
-      });
-    }
   }).catch(e => console.warn('Supabase not available in index.js', e));
 
   // ============ COMMENT SYSTEM (SUPABASE) ============
