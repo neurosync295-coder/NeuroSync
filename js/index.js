@@ -34,12 +34,27 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // ============ POMODORO ENGINE ============
+  // ============ GAMIFIED POMODORO ENGINE ============
   const timerDisplay = document.getElementById('timer-display');
   const startBtn = document.getElementById('start-btn');
   const pauseBtn = document.getElementById('pause-btn');
   const resetBtn = document.getElementById('reset-btn');
   const focusRingPath = document.getElementById('focus-ring-path');
+  const questStatus = document.getElementById('quest-status');
+
+  // Audio Elements
+  const spellCastSound = document.getElementById('spell-cast-sound');
+  const questCompleteSound = document.getElementById('quest-complete-sound');
+
+  // XP & Level Elements
+  const currentLevelDisplay = document.getElementById('current-level-display');
+  const currentXpDisplay = document.getElementById('current-xp-display');
+  const nextLevelXpDisplay = document.getElementById('next-level-xp-display');
+  const xpProgressBar = document.getElementById('xp-progress-bar');
+  const victoryBanner = document.getElementById('victory-banner');
+  const victoryBannerContent = document.getElementById('victory-banner-content');
+  const earnedXpDisplay = document.getElementById('earned-xp');
+  const victoryParticles = document.getElementById('victory-particles');
 
   let selectedTime = 25 * 60;
   let timeLeft = selectedTime;
@@ -48,14 +63,118 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const RING_CIRCUMFERENCE = 880; // stroke-dasharray value
 
+  // XP System Logic
+  let xp = parseInt(localStorage.getItem('neurosync_xp')) || 0;
+  let level = parseInt(localStorage.getItem('neurosync_level')) || 1;
+  const XP_PER_MINUTE = 10;
+
+  function getXpForNextLevel(currentLevel) {
+    return currentLevel * 1000;
+  }
+
+  function updateXpUI() {
+    currentLevelDisplay.textContent = level;
+    currentXpDisplay.textContent = xp;
+    const nextXp = getXpForNextLevel(level);
+    nextLevelXpDisplay.textContent = nextXp;
+
+    // Previous level requirements calculate the base of the bar
+    let prevLevelXp = level > 1 ? getXpForNextLevel(level - 1) : 0;
+    // For visual progress relative to ONLY this current level gap
+    let xpInCurrentLevel = xp;
+    if (level > 1) {
+      // Simple scale: if level > 1, total XP needed for next level is actually just nextXp. 
+      // We will just show total XP / nextXp ratio for simplicity
+    }
+
+    const progressPercent = Math.min((xp / nextXp) * 100, 100);
+    xpProgressBar.style.width = `${progressPercent}%`;
+  }
+
+  function addXp(minutesCompleted) {
+    const earned = minutesCompleted * XP_PER_MINUTE;
+    xp += earned;
+
+    const nextXp = getXpForNextLevel(level);
+    if (xp >= nextXp) {
+      level++;
+      xp = xp - nextXp; // carry over
+    }
+
+    localStorage.setItem('neurosync_xp', xp);
+    localStorage.setItem('neurosync_level', level);
+    updateXpUI();
+    return earned;
+  }
+
+  updateXpUI();
+
+  function triggerVictory(earned) {
+    if (questCompleteSound) questCompleteSound.play().catch(e => console.log('Audio disabled', e));
+
+    // Particles burst
+    victoryParticles.classList.remove('hidden');
+    for (let i = 0; i < 50; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('golden-particle');
+      particle.style.left = '50%';
+      particle.style.top = '50%';
+
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * 200 + 50;
+      particle.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+      particle.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+
+      particle.style.animationDuration = `${Math.random() * 1 + 0.5}s`;
+      victoryParticles.appendChild(particle);
+    }
+
+    // Cleanup particles
+    setTimeout(() => {
+      victoryParticles.innerHTML = '';
+      victoryParticles.classList.add('hidden');
+    }, 2000);
+
+    // Show Banner
+    earnedXpDisplay.textContent = earned;
+    victoryBanner.classList.remove('opacity-0', 'pointer-events-none');
+    victoryBannerContent.classList.remove('scale-90');
+    victoryBannerContent.classList.add('scale-100');
+
+    // Hide banner on click anywhere
+    const hideBanner = () => {
+      victoryBanner.classList.add('opacity-0', 'pointer-events-none');
+      victoryBannerContent.classList.remove('scale-100');
+      victoryBannerContent.classList.add('scale-90');
+      document.removeEventListener('click', hideBanner);
+    };
+
+    setTimeout(() => {
+      document.addEventListener('click', hideBanner);
+    }, 500);
+  }
+
   function updateDisplay() {
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
     timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-    // Update SVG Ring
+    // Update SVG Ring (Mana Bar)
     const offset = RING_CIRCUMFERENCE - (timeLeft / selectedTime) * RING_CIRCUMFERENCE;
     focusRingPath.style.strokeDashoffset = offset;
+
+    // Low Mana State (Under 5 minutes remaining, and selected time > 5 min to not trigger instantly on 5m timers)
+    if (timeLeft <= 300 && timeLeft > 0 && selectedTime > 300) {
+      focusRingPath.classList.add('mana-low');
+      questStatus.textContent = "BATTLING DISTRACTIONS...";
+      questStatus.classList.replace('text-arcane-electric', 'text-red-500');
+    } else {
+      focusRingPath.classList.remove('mana-low');
+      if (isRunning) {
+        questStatus.textContent = "CHANNELING FOCUS...";
+        questStatus.classList.replace('text-red-500', 'text-arcane-electric');
+      }
+    }
   }
 
   window.setTimer = function (minutes) {
@@ -63,18 +182,23 @@ document.addEventListener('DOMContentLoaded', function () {
     timeLeft = selectedTime;
     resetTimer();
 
-    // Update active button state
-    document.querySelectorAll('.obsidian-button[onclick^="setTimer"]').forEach(btn => {
-      btn.classList.remove('border-[var(--accent-signal)]');
+    // Update active button state (Quest Scrolls)
+    document.querySelectorAll('.quest-scroll').forEach(btn => {
+      btn.classList.remove('active-scroll');
     });
-    event.currentTarget.classList.add('border-[var(--accent-signal)]');
+    event.currentTarget.classList.add('active-scroll');
   };
 
   function startTimer() {
     if (!isRunning) {
+      if (spellCastSound) spellCastSound.play().catch(e => console.log('Audio disabled', e));
+
       isRunning = true;
       startBtn.style.display = 'none';
       pauseBtn.style.display = 'flex';
+      questStatus.textContent = "CHANNELING FOCUS...";
+      questStatus.classList.replace('text-red-500', 'text-arcane-electric'); // Ensure proper color on restart
+
       timerInterval = setInterval(() => {
         timeLeft--;
         updateDisplay();
@@ -83,7 +207,10 @@ document.addEventListener('DOMContentLoaded', function () {
           isRunning = false;
           startBtn.style.display = 'flex';
           pauseBtn.style.display = 'none';
-          alert('Synchronization Complete.');
+          questStatus.textContent = "QUEST COMPLETE";
+
+          const earned = addXp(selectedTime / 60);
+          triggerVictory(earned);
         }
       }, 1000);
     }
@@ -94,6 +221,7 @@ document.addEventListener('DOMContentLoaded', function () {
     isRunning = false;
     startBtn.style.display = 'flex';
     pauseBtn.style.display = 'none';
+    questStatus.textContent = "FOCUS SUSPENDED";
   }
 
   function resetTimer() {
@@ -103,6 +231,8 @@ document.addEventListener('DOMContentLoaded', function () {
     updateDisplay();
     startBtn.style.display = 'flex';
     pauseBtn.style.display = 'none';
+    questStatus.textContent = "AWAITING CHANNELING";
+    questStatus.classList.replace('text-red-500', 'text-arcane-electric');
   }
 
   startBtn.addEventListener('click', startTimer);

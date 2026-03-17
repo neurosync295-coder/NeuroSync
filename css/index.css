@@ -128,7 +128,7 @@ body {
   transform: scale(1.02) translateY(-10px);
 }
 
-/* Focus Ring (Timer) */
+/* Focus Ring (Arcane Core) */
 .focus-ring-container {
   position: relative;
   width: 300px;
@@ -143,21 +143,221 @@ body {
   position: absolute;
   top: 0;
   left: 0;
+}
+
+.main-progress-svg {
   transform: rotate(-90deg);
 }
 
 .focus-ring-bg {
   fill: none;
-  stroke: var(--bg-graphite);
+  stroke: rgba(139, 92, 246, 0.1);
   stroke-width: 4;
 }
 
-.focus-ring-path {
+.focus-ring-path.mana-bar {
   fill: none;
-  stroke: var(--accent-signal);
-  stroke-width: 4;
+  stroke: #8b5cf6;
+  /* Arcane Electric Blue/Purple */
+  stroke-width: 6;
   stroke-linecap: square;
-  transition: stroke-dashoffset 0.5s linear;
+  transition: stroke-dashoffset 0.5s linear, stroke 0.3s ease;
+  filter: drop-shadow(0 0 8px #8b5cf6);
+}
+
+/* Low Mana State */
+.mana-low {
+  stroke: #ef4444 !important;
+  /* Crimson Red */
+  filter: drop-shadow(0 0 15px #ef4444) !important;
+  animation: pulse-frantic 0.5s infinite alternate !important;
+}
+
+@keyframes pulse-frantic {
+  0% {
+    opacity: 0.8;
+    filter: drop-shadow(0 0 10px #ef4444);
+  }
+
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 25px #ef4444) drop-shadow(0 0 10px #dc2626);
+    transform: scale(1.02);
+  }
+}
+
+/* Animations added for Arcane Core */
+.animate-spin-slow {
+  animation: spin 20s linear infinite;
+}
+
+.animate-spin-reverse-slower {
+  animation: spin-reverse 30s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+/* Magical Controls & Presets */
+.magical-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: #fbbf24;
+  /* Arcane Gold */
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8), 0 4px 6px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+}
+
+.magical-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px solid #8b5cf6;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.magical-button:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: inset 0 0 15px rgba(139, 92, 246, 0.2), 0 0 20px rgba(139, 92, 246, 0.4);
+  border-color: #fbbf24;
+  color: #fff;
+}
+
+.magical-button:active {
+  transform: scale(0.95);
+}
+
+.quest-scroll {
+  background: rgba(30, 27, 75, 0.6);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  color: #d1d5db;
+  padding: 0.5rem 1.5rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.quest-scroll::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background: #fbbf24;
+  transition: width 0.3s ease;
+}
+
+.quest-scroll:hover {
+  background: rgba(30, 27, 75, 0.9);
+  color: #fbbf24;
+  border-color: #8b5cf6;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.quest-scroll:hover::after,
+.quest-scroll.active-scroll::after {
+  width: 100%;
+}
+
+.quest-scroll.active-scroll {
+  border-color: #fbbf24;
+  color: #fbbf24;
+  background: rgba(139, 92, 246, 0.2);
+  box-shadow: inset 0 0 10px rgba(251, 191, 36, 0.1);
+}
+
+.scroll-icon {
+  font-size: 1.2rem;
+  filter: grayscale(100%) brightness(1.5);
+  transition: filter 0.3s;
+}
+
+.quest-scroll:hover .scroll-icon,
+.quest-scroll.active-scroll .scroll-icon {
+  filter: grayscale(0%);
+}
+
+/* Custom UI Colors & Utilities for RPG Layout */
+.bg-arcane-runes {
+  background-color: #030305;
+  background-image: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.01) 0px, rgba(255, 255, 255, 0.01) 2px, transparent 2px, transparent 10px);
+}
+
+.text-arcane-gold {
+  color: #fbbf24;
+}
+
+.text-arcane-electric {
+  color: #a78bfa;
+}
+
+.border-arcane-glow {
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.drop-shadow-glow {
+  filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.6));
+}
+
+/* Victory Particles */
+.golden-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #fbbf24;
+  box-shadow: 0 0 10px #fbbf24, 0 0 20px #f59e0b;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: burst linear forwards;
+}
+
+@keyframes burst {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0);
+    opacity: 0;
+  }
 }
 
 /* Animations */
@@ -271,16 +471,26 @@ body.focus-mode [data-focus-section] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: transparent;
   border: none;
   box-shadow: none;
   padding: 2rem;
   gap: 2rem;
   transition: all 0.5s ease-in-out;
-  position: relative;
-  z-index: 1001;
-  background: inherit;
-  overflow: visible;
+  position: fixed !important;
+  left: 0;
+  top: 0;
+  z-index: 9999;
+  background-color: var(--bg-obsidian);
+  background-image: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.01) 0px, rgba(255, 255, 255, 0.01) 2px, transparent 2px, transparent 10px);
+  overflow: hidden;
+}
+
+body.focus-mode .dashboard-hide-focus,
+body.focus-mode #side-menu-container,
+body.focus-mode #universal-navbar-container {
+  display: none !important;
+  opacity: 0;
 }
 
 body.focus-mode [data-focus-section] .flex.items-center.gap-4 {
